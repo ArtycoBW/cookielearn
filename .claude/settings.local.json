@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__filesystem__read_text_file",
+      "mcp__filesystem__create_directory",
+      "mcp__filesystem__write_file",
+      "Bash(git config:*)",
+      "Bash(git init:*)",
+      "Bash(export TMPDIR=/tmp:*)",
+      "Bash(TMPDIR=/tmp git:*)",
+      "Bash(TMP=/tmp TEMP=/tmp git init:*)",
+      "Bash(go version:*)",
+      "Bash(where:*)"
+    ]
+  }
+}
