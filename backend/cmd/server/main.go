@@ -1,19 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/cookielearn/backend/internal/handler"
+	"github.com/cookielearn/backend/internal/middleware"
+	"github.com/cookielearn/backend/internal/repository"
+	"github.com/cookielearn/backend/internal/service"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
 func main() {
-	// Load environment variables
+	ctx := context.Background()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -24,17 +30,32 @@ func main() {
 		frontendURL = "http://localhost:3000"
 	}
 
-	// Create router
+	db, err := repository.NewDB(ctx)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer db.Close()
+
+	profileRepo := repository.NewProfileRepository(db)
+	txRepo := repository.NewTransactionRepository(db)
+	certRepo := repository.NewCertificateRepository(db)
+	purchRepo := repository.NewPurchaseRepository(db)
+	bonusRepo := repository.NewDailyBonusRepository(db)
+
+	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo)
+	shopService := service.NewShopService(certRepo, purchRepo, txRepo, db)
+
+	studentHandler := handler.NewStudentHandler(studentService)
+	shopHandler := handler.NewShopHandler(shopService)
+
 	r := chi.NewRouter()
 
-	// Middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(chimiddleware.RequestID)
+	r.Use(chimiddleware.RealIP)
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
+	r.Use(chimiddleware.Timeout(60 * time.Second))
 
-	// CORS
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -44,14 +65,29 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok","service":"cookielearn-backend"}`))
 	})
 
-	// Start server
+	r.Route("/api", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware)
+
+		r.Get("/me", studentHandler.GetMe)
+		r.Get("/me/transactions", studentHandler.GetMyTransactions)
+		r.Get("/me/certificates", studentHandler.GetMyCertificates)
+		r.Post("/me/daily-bonus", studentHandler.ClaimDailyBonus)
+
+		r.Get("/leaderboard", studentHandler.GetLeaderboard)
+
+		r.Route("/shop", func(r chi.Router) {
+			r.Get("/certificates", shopHandler.GetCertificates)
+			r.Post("/certificates/{id}/buy", shopHandler.BuyCertificate)
+			r.Post("/random-bonus/buy", shopHandler.BuyRandomBonus)
+		})
+	})
+
 	addr := fmt.Sprintf(":%s", port)
 	log.Printf("🍪 CookieLearn Backend starting on %s", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {

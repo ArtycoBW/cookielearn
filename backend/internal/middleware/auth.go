@@ -77,7 +77,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 		}
 		if userRole == "" {
-			userRole = "student" 
+			userRole = "student"
 		}
 
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
