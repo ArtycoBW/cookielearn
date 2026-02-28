@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CookieLearn - Get JWT Token</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #3b82f6;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        p {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .hidden { display: none; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .copy-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 CookieLearn</h1>
+        <p>Получить JWT токен для тестирования API</p>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="student@test.com" value="student@test.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input id="password" type="password" placeholder="password123" value="password123">
+        </div>
+        
+        <button onclick="login()">Войти и получить токен</button>
+        
+        <div id="result" class="hidden"></div>
+    </div>
+    
+    <script>
+        const supabase = window.supabase.createClient(
+            'https://rapcrtkmgfmzdzefnsaq.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhcGNydGttZ2ZtemR6ZWZuc2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzU0OTksImV4cCI6MjA4NzgxMTQ5OX0.R7mfW29Ld7xeLy_qEZwgb8fzbTrke_q67Fo3v2S3L0M'
+        );
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = 'Загрузка...';
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+            
+            if (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Ошибка: ${error.message}</span>`;
+            } else {
+                const token = data.session.access_token;
+                resultDiv.innerHTML = `
+<span class="success">✅ Успешный вход!</span>
+
+<strong>User ID:</strong>
+${data.user.id}
+
+<strong>Email:</strong>
+${data.user.email}
+
+<strong>JWT Token:</strong>
+${token}
+
+<button class="copy-btn" onclick="copyToken('${token}')">📋 Скопировать токен</button>
+                `;
+            }
+        }
+
+        function copyToken(token) {
+            navigator.clipboard.writeText(token).then(() => {
+                alert('✅ Токен скопирован в буфер обмена!');
+            });
+        }
+    </script>
+</body>
+</html>

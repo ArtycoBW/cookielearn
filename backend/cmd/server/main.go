@@ -71,6 +71,9 @@ func main() {
 		w.Write([]byte(`{"status":"ok","service":"cookielearn-backend"}`))
 	})
 
+	r.Get("/api/docs", handler.ServeSwaggerUI)
+	r.Get("/api/docs/swagger.yaml", handler.ServeSwaggerYAML)
+
 	r.Route("/api", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 
@@ -90,6 +93,7 @@ func main() {
 
 	addr := fmt.Sprintf(":%s", port)
 	log.Printf("🍪 CookieLearn Backend starting on %s", addr)
+	log.Printf("📚 API Documentation: http://localhost:%s/api/docs", port)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal(err)
 	}

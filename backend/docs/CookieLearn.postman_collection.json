@@ -1,0 +1,212 @@
+{
+  "info": {
+    "name": "CookieLearn API",
+    "description": "API для системы геймификации обучения",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Get My Certificates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/certificates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "certificates"]
+            }
+          }
+        },
+        {
+          "name": "Claim Daily Bonus",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/daily-bonus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "daily-bonus"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Get Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shop",
+      "item": [
+        {
+          "name": "Get Certificates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/shop/certificates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "shop", "certificates"]
+            }
+          }
+        },
+        {
+          "name": "Buy Certificate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/shop/certificates/:id/buy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "shop", "certificates", ":id", "buy"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "CERTIFICATE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buy Random Bonus",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cost\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/shop/random-bonus/buy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "shop", "random-bonus", "buy"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

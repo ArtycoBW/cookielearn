@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: CookieLearn API
+  description: API для системы геймификации обучения с виртуальными печеньками
+  version: 1.0.0
+  contact:
+    name: CookieLearn Team
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Health
+    description: Проверка состояния сервиса
+  - name: Student
+    description: Endpoints для студентов
+  - name: Shop
+    description: Магазин сертификатов
+  - name: Leaderboard
+    description: Таблица лидеров
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Проверка состояния сервиса
+      security: []
+      responses:
+        '200':
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: cookielearn-backend
+
+  /api/me:
+    get:
+      tags:
+        - Student
+      summary: Получить профиль текущего пользователя
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/me/transactions:
+    get:
+      tags:
+        - Student
+      summary: Получить историю транзакций
+      responses:
+        '200':
+          description: Список транзакций
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/me/certificates:
+    get:
+      tags:
+        - Student
+      summary: Получить купленные сертификаты
+      responses:
+        '200':
+          description: Список покупок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Purchase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/me/daily-bonus:
+    post:
+      tags:
+        - Student
+      summary: Получить ежедневный бонус
+      responses:
+        '200':
+          description: Бонус успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  bonus:
+                    $ref: '#/components/schemas/DailyBonus'
+                  message:
+                    type: string
+                    example: "Вы получили 1 печеньку!"
+        '400':
+          description: Бонус уже получен сегодня
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/leaderboard:
+    get:
+      tags:
+        - Leaderboard
+      summary: Получить таблицу лидеров
+      responses:
+        '200':
+          description: Список лидеров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
+
+  /api/shop/certificates:
+    get:
+      tags:
+        - Shop
+      summary: Получить каталог сертификатов
+      responses:
+        '200':
+          description: Список доступных сертификатов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Certificate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/shop/certificates/{id}/buy:
+    post:
+      tags:
+        - Shop
+      summary: Купить сертификат
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID сертификата
+      responses:
+        '200':
+          description: Сертификат успешно куплен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  purchase:
+                    $ref: '#/components/schemas/Purchase'
+                  message:
+                    type: string
+                    example: "Сертификат успешно куплен!"
+        '400':
+          description: Ошибка покупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/shop/random-bonus/buy:
+    post:
+      tags:
+        - Shop
+      summary: Купить случайный бонус
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cost:
+                  type: integer
+                  example: 3
+                  description: Стоимость попытки
+      responses:
+        '200':
+          description: Бонус получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  cost:
+                    type: integer
+                    example: 3
+                  reward:
+                    type: integer
+                    example: 5
+                  message:
+                    type: string
+                    example: "Вы выиграли 5 печенек!"
+        '400':
+          description: Недостаточно печенек
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен от Supabase Auth
+
+  schemas:
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+          example: "Иван Иванов"
+        group_name:
+          type: string
+          nullable: true
+          example: "ИВТ-401"
+        role:
+          type: string
+          enum: [student, admin]
+          example: student
+        balance:
+          type: integer
+          example: 42
+        created_at:
+          type: string
+          format: date-time
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          example: 10
+        reason:
+          type: string
+          example: "Ежедневный бонус"
+        category:
+          type: string
+          nullable: true
+          enum: [daily_bonus, manual, purchase, random_bonus, task_reward]
+          example: daily_bonus
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Освобождение от экзамена"
+        description:
+          type: string
+          nullable: true
+          example: "Полное освобождение от одного экзамена по выбору"
+        base_price:
+          type: integer
+          example: 100
+        current_price:
+          type: integer
+          example: 110
+        inflation_step:
+          type: integer
+          example: 10
+        total_quantity:
+          type: integer
+          nullable: true
+          example: 3
+        remaining_quantity:
+          type: integer
+          nullable: true
+          example: 2
+        validity_days:
+          type: integer
+          nullable: true
+          example: 30
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Purchase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        certificate_id:
+          type: string
+          format: uuid
+        price_paid:
+          type: integer
+          example: 100
+        purchased_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [active, used, expired]
+          example: active
+        certificate:
+          $ref: '#/components/schemas/Certificate'
+
+    DailyBonus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        awarded_at:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+          example: "Иван Иванов"
+        group_name:
+          type: string
+          nullable: true
+          example: "ИВТ-401"
+        balance:
+          type: integer
+          example: 150
+        rank:
+          type: integer
+          example: 1
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Описание ошибки"
+
+  responses:
+    Unauthorized:
+      description: Пользователь не авторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Отсутствует токен авторизации"

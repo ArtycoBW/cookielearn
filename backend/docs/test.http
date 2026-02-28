@@ -1,0 +1,42 @@
+@baseUrl = http://localhost:8080
+@token = YOUR_JWT_TOKEN_HERE
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get Profile
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
+
+### Get Transactions
+GET {{baseUrl}}/api/me/transactions
+Authorization: Bearer {{token}}
+
+### Claim Daily Bonus
+POST {{baseUrl}}/api/me/daily-bonus
+Authorization: Bearer {{token}}
+
+### Get Leaderboard
+GET {{baseUrl}}/api/leaderboard
+Authorization: Bearer {{token}}
+
+### Get Certificates
+GET {{baseUrl}}/api/shop/certificates
+Authorization: Bearer {{token}}
+
+### Buy Certificate
+POST {{baseUrl}}/api/shop/certificates/CERTIFICATE_ID_HERE/buy
+Authorization: Bearer {{token}}
+
+### Buy Random Bonus
+POST {{baseUrl}}/api/shop/random-bonus/buy
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cost": 3
+}
+
+### Get My Certificates
+GET {{baseUrl}}/api/me/certificates
+Authorization: Bearer {{token}}
