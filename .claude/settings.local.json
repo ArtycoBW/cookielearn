@@ -10,7 +10,8 @@
       "Bash(TMPDIR=/tmp git:*)",
       "Bash(TMP=/tmp TEMP=/tmp git init:*)",
       "Bash(go version:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "mcp__filesystem__read_media_file"
     ]
   }
 }

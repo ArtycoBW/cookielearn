@@ -13,14 +13,11 @@ type DB struct {
 }
 
 func NewDB(ctx context.Context) (*DB, error) {
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	dbURL := os.Getenv("DATABASE_URL")
 	
-	if supabaseURL == "" {
-		return nil, fmt.Errorf("SUPABASE_URL not set")
+	if dbURL == "" {
+		return nil, fmt.Errorf("DATABASE_URL not set")
 	}
-
-	dbURL := fmt.Sprintf("postgresql://postgres.rapcrtkmgfmzdzefnsaq:%s@aws-0-eu-central-1.pooler.supabase.com:6543/postgres", serviceKey)
 
 	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {

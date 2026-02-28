@@ -7,7 +7,6 @@ import (
 
 	"github.com/cookielearn/backend/internal/model"
 	"github.com/cookielearn/backend/internal/repository"
-	"github.com/jackc/pgx/v5"
 )
 
 type ShopService struct {
