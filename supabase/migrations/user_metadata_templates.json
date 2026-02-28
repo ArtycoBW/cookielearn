@@ -1,0 +1,102 @@
+{
+  "description": "Шаблоны User Metadata для создания пользователей через Supabase Auth UI",
+  "instructions": [
+    "1. Откройте Supabase Dashboard > Authentication > Users",
+    "2. Нажмите 'Add user'",
+    "3. Введите Email и Password",
+    "4. Скопируйте соответствующий JSON в поле 'User Metadata'",
+    "5. Нажмите 'Create user'"
+  ],
+  
+  "templates": {
+    "student_ivt401_1": {
+      "email": "ivan.ivanov@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Иван Иванов",
+        "role": "student"
+      }
+    },
+    
+    "student_ivt401_2": {
+      "email": "petr.petrov@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Пётр Петров",
+        "role": "student"
+      }
+    },
+    
+    "student_ivt401_3": {
+      "email": "sidor.sidorov@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Сидор Сидоров",
+        "role": "student"
+      }
+    },
+    
+    "student_ivt402_1": {
+      "email": "maria.kuznetsova@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Мария Кузнецова",
+        "role": "student"
+      }
+    },
+    
+    "student_ivt402_2": {
+      "email": "alex.smirnov@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Алексей Смирнов",
+        "role": "student"
+      }
+    },
+    
+    "student_pmi301_1": {
+      "email": "anna.popova@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Анна Попова",
+        "role": "student"
+      }
+    },
+    
+    "student_pmi301_2": {
+      "email": "dmitry.volkov@test.com",
+      "password": "Test123!",
+      "metadata": {
+        "full_name": "Дмитрий Волков",
+        "role": "student"
+      }
+    },
+    
+    "admin": {
+      "email": "admin@test.com",
+      "password": "Admin123!",
+      "metadata": {
+        "full_name": "Администратор Системы",
+        "role": "admin"
+      }
+    }
+  },
+  
+  "copy_paste_metadata": {
+    "student": {
+      "full_name": "Имя Фамилия",
+      "role": "student"
+    },
+    
+    "admin": {
+      "full_name": "Администратор",
+      "role": "admin"
+    }
+  },
+  
+  "bulk_creation_sql": {
+    "description": "Если нужно создать много пользователей программно (не через UI)",
+    "note": "ВНИМАНИЕ: Это для референса. Создавайте пользователей через Supabase Auth UI!",
+    "example": "-- Используйте Supabase API или Dashboard для создания пользователей\n-- После создания обновите группы через SQL:\n\nUPDATE profiles SET group_name = 'ИВТ-401' WHERE full_name IN ('Иван Иванов', 'Пётр Петров', 'Сидор Сидоров');\nUPDATE profiles SET group_name = 'ИВТ-402' WHERE full_name IN ('Мария Кузнецова', 'Алексей Смирнов');\nUPDATE profiles SET group_name = 'ПМИ-301' WHERE full_name IN ('Анна Попова', 'Дмитрий Волков');"
+  }
+}

@@ -85,3 +85,24 @@ export function useBuyRandomBonus() {
     },
   })
 }
+
+export function useMyCertificates() {
+  return useQuery({
+    queryKey: queryKeys.purchases,
+    queryFn: () => api.get<Purchase[]>('/api/me/certificates'),
+  })
+}
+
+export function useUseCertificate() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (certificateId: string) => 
+      api.post(`/api/me/certificates/${certificateId}/use`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+    },
+  })
+}
