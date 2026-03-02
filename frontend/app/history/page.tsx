@@ -1,10 +1,13 @@
-"use client"
+﻿"use client"
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTransactions } from '@/lib/queries'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Navigation } from '@/components/navigation'
 import { formatDateTime } from '@/lib/utils'
 
@@ -71,65 +74,51 @@ export default function HistoryPage() {
     <>
       <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-5xl mx-auto p-6 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">История транзакций 📊</h1>
+        <div className="mx-auto max-w-5xl space-y-6 p-6">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="mb-2 text-4xl font-bold text-blue-900">История транзакций 📊</h1>
             <p className="text-blue-600/70">Все операции с вашими печеньками</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Фильтры</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Поиск по причине"
-                    className="w-full px-3 py-2 rounded-lg border-2 border-blue-100 focus:border-blue-500 focus:outline-none transition-smooth"
-                  />
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Поиск по причине" />
 
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-blue-100 focus:border-blue-500 focus:outline-none bg-white transition-smooth"
-                  >
-                    <option value="all">Все категории</option>
-                    <option value="daily_bonus">Ежедневный бонус</option>
-                    <option value="purchase">Покупки</option>
-                    <option value="random_bonus">Случайный бонус</option>
-                    <option value="manual">Начисления</option>
-                    <option value="task_reward">Награды за задания</option>
-                  </select>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Категория" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все категории</SelectItem>
+                      <SelectItem value="daily_bonus">Ежедневный бонус</SelectItem>
+                      <SelectItem value="purchase">Покупки</SelectItem>
+                      <SelectItem value="random_bonus">Случайный бонус</SelectItem>
+                      <SelectItem value="manual">Начисления</SelectItem>
+                      <SelectItem value="task_reward">Награды за задания</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                  <select
-                    value={amountFilter}
-                    onChange={(e) => setAmountFilter(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-blue-100 focus:border-blue-500 focus:outline-none bg-white transition-smooth"
-                  >
-                    <option value="all">Все операции</option>
-                    <option value="income">Только начисления</option>
-                    <option value="expense">Только списания</option>
-                  </select>
+                  <Select value={amountFilter} onValueChange={setAmountFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Тип операции" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все операции</SelectItem>
+                      <SelectItem value="income">Только начисления</SelectItem>
+                      <SelectItem value="expense">Только списания</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Транзакции ({filteredTransactions.length})</CardTitle>
@@ -138,7 +127,7 @@ export default function HistoryPage() {
                 {isLoading ? (
                   <div className="space-y-3">
                     {[...Array(10)].map((_, i) => (
-                      <div key={i} className="h-20 bg-blue-50 rounded-lg animate-pulse" />
+                      <div key={i} className="h-20 animate-pulse rounded-lg bg-blue-50" />
                     ))}
                   </div>
                 ) : filteredTransactions.length > 0 ? (
@@ -149,14 +138,12 @@ export default function HistoryPage() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.03 }}
-                        className="flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all"
+                        className="flex items-center justify-between rounded-lg bg-blue-50 p-4 transition-all hover:bg-blue-100"
                       >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className={`text-3xl ${tx.amount > 0 ? 'scale-110' : 'opacity-50'}`}>
-                            🍪
-                          </div>
+                        <div className="flex flex-1 items-center gap-4">
+                          <div className={`text-3xl ${tx.amount > 0 ? 'scale-110' : 'opacity-50'}`}>🍪</div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="mb-1 flex items-center gap-2">
                               <p className="font-medium text-blue-900">{tx.reason}</p>
                               {tx.category && (
                                 <Badge variant={getCategoryColor(tx.category)} className="text-xs">
@@ -175,20 +162,21 @@ export default function HistoryPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-20 text-blue-600/60">
-                    <div className="text-6xl mb-4">📭</div>
+                  <div className="py-20 text-center text-blue-600/60">
+                    <div className="mb-4 text-6xl">📭</div>
                     <p className="text-xl">По выбранным фильтрам ничего не найдено</p>
                     {hasActiveFilters && (
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => {
                           setCategoryFilter('all')
                           setAmountFilter('all')
                           setSearch('')
                         }}
-                        className="mt-4 text-blue-700 hover:text-blue-900 font-medium"
+                        className="mt-4"
                       >
                         Сбросить фильтры
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}

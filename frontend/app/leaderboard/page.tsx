@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { motion } from 'framer-motion'
 import { useLeaderboard, useProfile } from '@/lib/queries'
@@ -11,10 +11,14 @@ export default function LeaderboardPage() {
 
   const getMedalEmoji = (rank: number) => {
     switch (rank) {
-      case 1: return '🥇'
-      case 2: return '🥈'
-      case 3: return '🥉'
-      default: return `${rank}.`
+      case 1:
+        return '🥇'
+      case 2:
+        return '🥈'
+      case 3:
+        return '🥉'
+      default:
+        return `${rank}.`
     }
   }
 
@@ -22,25 +26,13 @@ export default function LeaderboardPage() {
     <>
       <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-4xl mx-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">
-              Таблица лидеров 🏆
-            </h1>
-            <p className="text-blue-600/70">
-              Рейтинг студентов по печенькам
-            </p>
+        <div className="mx-auto max-w-4xl p-6">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <h1 className="mb-2 text-4xl font-bold text-blue-900">Таблица лидеров 🏆</h1>
+            <p className="text-blue-600/70">Рейтинг студентов по печенькам</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Топ студентов</CardTitle>
@@ -49,7 +41,7 @@ export default function LeaderboardPage() {
                 {isLoading ? (
                   <div className="space-y-3">
                     {[...Array(10)].map((_, i) => (
-                      <div key={i} className="h-16 bg-blue-50 rounded-lg animate-pulse" />
+                      <div key={i} className="h-16 animate-pulse rounded-lg bg-blue-50" />
                     ))}
                   </div>
                 ) : leaderboard && leaderboard.length > 0 ? (
@@ -64,16 +56,16 @@ export default function LeaderboardPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                            isCurrentUser 
-                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105' 
+                          className={`flex items-center justify-between rounded-lg p-4 transition-all ${
+                            isCurrentUser
+                              ? 'scale-105 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
                               : isTopThree
-                              ? 'bg-gradient-to-r from-blue-100 to-blue-50'
-                              : 'bg-blue-50 hover:bg-blue-100'
+                                ? 'bg-gradient-to-r from-blue-100 to-blue-50'
+                                : 'bg-blue-50 hover:bg-blue-100'
                           }`}
                         >
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className={`text-2xl font-bold ${isCurrentUser ? 'text-white' : 'text-blue-900'} min-w-[3rem] text-center`}>
+                          <div className="flex flex-1 items-center gap-4">
+                            <div className={`min-w-[3rem] text-center text-2xl font-bold ${isCurrentUser ? 'text-white' : 'text-blue-900'}`}>
                               {getMedalEmoji(entry.rank)}
                             </div>
                             <div className="flex-1">
@@ -91,9 +83,7 @@ export default function LeaderboardPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`text-2xl font-bold ${isCurrentUser ? 'text-white' : 'text-blue-900'}`}>
-                              {entry.balance}
-                            </span>
+                            <span className={`text-2xl font-bold ${isCurrentUser ? 'text-white' : 'text-blue-900'}`}>{entry.balance}</span>
                             <span className="text-2xl">🍪</span>
                           </div>
                         </motion.div>
@@ -101,8 +91,8 @@ export default function LeaderboardPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-20 text-blue-600/50">
-                    <div className="text-6xl mb-4">🏆</div>
+                  <div className="py-20 text-center text-blue-600/50">
+                    <div className="mb-4 text-6xl">🏆</div>
                     <p className="text-xl">Рейтинг пока пуст</p>
                   </div>
                 )}

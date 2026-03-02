@@ -1,4 +1,4 @@
-export interface Profile {
+﻿export interface Profile {
   id: string
   full_name: string
   group_name?: string
@@ -58,4 +58,47 @@ export interface LeaderboardEntry {
   group_name?: string
   balance: number
   rank: number
+}
+
+export interface Task {
+  id: string
+  title: string
+  description?: string
+  type: 'vote' | 'quiz' | 'activity'
+  reward: number
+  deadline?: string
+  status: 'active' | 'closed'
+  created_by?: string
+  created_at: string
+  closed_at?: string
+}
+
+export interface Stats {
+  total_users: number
+  total_students: number
+  total_cookies: number
+  total_transactions: number
+  avg_balance: number
+  active_tasks: number
+  total_purchases: number
+}
+
+export interface StudentAccount {
+  id: string
+  email: string
+  password: string
+  full_name: string
+}
+
+export interface RegisterStudentResponse {
+  success: boolean
+  account: StudentAccount
+  message: string
+}
+
+export interface BulkImportStudentsResponse {
+  success: boolean
+  created_count: number
+  accounts: StudentAccount[]
+  message: string
 }

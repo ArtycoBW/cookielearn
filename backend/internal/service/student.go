@@ -80,6 +80,28 @@ func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*mode
 	return s.profileRepo.GetLeaderboard(ctx, limit)
 }
 
+func (s *StudentService) SyncProfile(
+	ctx context.Context,
+	userID string,
+	fullName string,
+	groupName *string,
+	role string,
+) (*model.Profile, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("user id обязателен")
+	}
+
+	if fullName == "" {
+		fullName = "Пользователь"
+	}
+
+	if role == "" {
+		role = "student"
+	}
+
+	return s.profileRepo.UpsertFromAuth(ctx, userID, fullName, groupName, role)
+}
+
 func (s *StudentService) UseCertificate(ctx context.Context, userID, purchaseID string) error {
 	if purchaseID == "" {
 		return fmt.Errorf("отсутствует ID сертификата")

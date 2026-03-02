@@ -41,12 +41,21 @@ func main() {
 	certRepo := repository.NewCertificateRepository(db)
 	purchRepo := repository.NewPurchaseRepository(db)
 	bonusRepo := repository.NewDailyBonusRepository(db)
+	taskRepo := repository.NewTaskRepository(db)
+	statsRepo := repository.NewStatsRepository(db)
+
+	supabaseURL := os.Getenv("SUPABASE_URL")
+	supabaseServiceRole := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	studentEmailDomain := os.Getenv("SUPABASE_STUDENT_EMAIL_DOMAIN")
+	authAdmin := service.NewSupabaseAuthAdmin(supabaseURL, supabaseServiceRole)
 
 	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo)
 	shopService := service.NewShopService(certRepo, purchRepo, txRepo, db)
+	adminService := service.NewAdminService(profileRepo, txRepo, certRepo, taskRepo, statsRepo, authAdmin, studentEmailDomain)
 
 	studentHandler := handler.NewStudentHandler(studentService)
 	shopHandler := handler.NewShopHandler(shopService)
+	adminHandler := handler.NewAdminHandler(adminService)
 
 	r := chi.NewRouter()
 
@@ -78,6 +87,7 @@ func main() {
 		r.Use(middleware.AuthMiddleware)
 
 		r.Get("/me", studentHandler.GetMe)
+		r.Post("/auth/sync", studentHandler.SyncProfile)
 		r.Get("/me/transactions", studentHandler.GetMyTransactions)
 		r.Get("/me/certificates", studentHandler.GetMyCertificates)
 		r.Post("/me/certificates/{id}/use", studentHandler.UseCertificate)
@@ -90,11 +100,35 @@ func main() {
 			r.Post("/certificates/{id}/buy", shopHandler.BuyCertificate)
 			r.Post("/random-bonus/buy", shopHandler.BuyRandomBonus)
 		})
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(middleware.AdminOnly)
+
+			r.Get("/students", adminHandler.GetStudents)
+			r.Post("/students", adminHandler.CreateStudent)
+			r.Post("/students/register", adminHandler.RegisterStudent)
+			r.Post("/students/bulk-import", adminHandler.BulkImportStudents)
+			r.Put("/students/{id}", adminHandler.UpdateStudent)
+			r.Delete("/students/{id}", adminHandler.DeleteStudent)
+			r.Post("/cookies/award", adminHandler.AwardCookies)
+
+			r.Get("/certificates", adminHandler.GetCertificates)
+			r.Post("/certificates", adminHandler.CreateCertificate)
+			r.Put("/certificates/{id}", adminHandler.UpdateCertificate)
+			r.Delete("/certificates/{id}", adminHandler.DeleteCertificate)
+
+			r.Get("/tasks", adminHandler.GetTasks)
+			r.Post("/tasks", adminHandler.CreateTask)
+			r.Put("/tasks/{id}", adminHandler.UpdateTask)
+			r.Post("/tasks/{id}/close", adminHandler.CloseTask)
+
+			r.Get("/stats", adminHandler.GetStats)
+		})
 	})
 
 	addr := fmt.Sprintf(":%s", port)
-	log.Printf("🍪 CookieLearn Backend starting on %s", addr)
-	log.Printf("📚 API Documentation: http://localhost:%s/api/docs", port)
+	log.Printf("CookieLearn Backend starting on %s", addr)
+	log.Printf("API Documentation: http://localhost:%s/api/docs", port)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal(err)
 	}

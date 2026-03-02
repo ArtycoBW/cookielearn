@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
@@ -41,11 +41,11 @@ export default function CertificatesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Активен</Badge>
+        return <Badge className="border-green-500/30 bg-green-500/20 text-green-700">Активен</Badge>
       case 'used':
-        return <Badge className="bg-gray-500/20 text-gray-700 border-gray-500/30">Использован</Badge>
+        return <Badge className="border-gray-500/30 bg-gray-500/20 text-gray-700">Использован</Badge>
       case 'expired':
-        return <Badge className="bg-red-500/20 text-red-700 border-red-500/30">Истек</Badge>
+        return <Badge className="border-red-500/30 bg-red-500/20 text-red-700">Истек</Badge>
       default:
         return <Badge>{status}</Badge>
     }
@@ -54,11 +54,11 @@ export default function CertificatesPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <Clock className="w-5 h-5 text-green-600" />
+        return <Clock className="h-5 w-5 text-green-600" />
       case 'used':
-        return <CheckCircle2 className="w-5 h-5 text-gray-600" />
+        return <CheckCircle2 className="h-5 w-5 text-gray-600" />
       case 'expired':
-        return <XCircle className="w-5 h-5 text-red-600" />
+        return <XCircle className="h-5 w-5 text-red-600" />
       default:
         return null
     }
@@ -76,32 +76,29 @@ export default function CertificatesPage() {
     <>
       <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+        <div className="mx-auto max-w-6xl space-y-8">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-4xl font-bold text-blue-900">Мои сертификаты</h1>
-            <p className="text-blue-600/70 mt-2">Покупки, сроки действия и текущие статусы</p>
+            <p className="mt-2 text-blue-600/70">Покупки, сроки действия и текущие статусы</p>
           </motion.div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-64 bg-white rounded-xl border border-blue-100 animate-pulse" />
+                <div key={i} className="h-64 animate-pulse rounded-xl border border-blue-100 bg-white" />
               ))}
             </div>
           ) : !certificates || certificates.length === 0 ? (
-            <Card className="p-12 text-center bg-white">
-              <div className="text-6xl mb-4">🎫</div>
-              <h2 className="text-2xl font-semibold text-blue-900 mb-2">У вас пока нет сертификатов</h2>
-              <p className="text-blue-600/70 mb-6">Посетите магазин, чтобы приобрести сертификаты</p>
+            <Card className="bg-white p-12 text-center">
+              <div className="mb-4 text-6xl">🎫</div>
+              <h2 className="mb-2 text-2xl font-semibold text-blue-900">У вас пока нет сертификатов</h2>
+              <p className="mb-6 text-blue-600/70">Посетите магазин, чтобы приобрести сертификаты</p>
               <Link href="/shop">
                 <Button>Перейти в магазин</Button>
               </Link>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {certificates.map((cert, index) => (
                 <motion.div
                   key={cert.id}
@@ -109,8 +106,8 @@ export default function CertificatesPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: index * 0.06 }}
                 >
-                  <Card className="p-6 bg-white h-full">
-                    <div className="flex items-start justify-between mb-4 gap-2">
+                  <Card className="h-full bg-white p-6">
+                    <div className="mb-4 flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(cert.status)}
                         <h3 className="text-xl font-bold text-blue-900">{cert.certificate?.title}</h3>
@@ -118,37 +115,33 @@ export default function CertificatesPage() {
                       {getStatusBadge(cert.status)}
                     </div>
 
-                    <p className="text-blue-600/70 mb-4 line-clamp-2">{cert.certificate?.description}</p>
+                    <p className="mb-4 line-clamp-2 text-blue-600/70">{cert.certificate?.description}</p>
 
-                    <div className="space-y-2 mb-4">
+                    <div className="mb-4 space-y-2">
                       <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="h-4 w-4" />
                         <span>Куплен: {formatDate(cert.purchased_at)}</span>
                       </div>
                       {cert.expires_at && (
                         <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                          <Clock className="w-4 h-4" />
+                          <Clock className="h-4 w-4" />
                           <span>Действителен до: {formatDate(cert.expires_at)}</span>
                         </div>
                       )}
                       {cert.used_at && (
                         <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                          <CheckCircle2 className="w-4 h-4" />
+                          <CheckCircle2 className="h-4 w-4" />
                           <span>Использован: {formatDate(cert.used_at)}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-blue-100">
-                      <div className="text-sm text-blue-600/70 mb-3">
-                        Стоимость: <span className="text-blue-600 font-semibold">{cert.price_paid} 🍪</span>
+                    <div className="border-t border-blue-100 pt-4">
+                      <div className="mb-3 text-sm text-blue-600/70">
+                        Стоимость: <span className="font-semibold text-blue-600">{cert.price_paid} 🍪</span>
                       </div>
                       {cert.status === 'active' && (
-                        <Button
-                          onClick={() => handleUse(cert.id)}
-                          disabled={usingId === cert.id}
-                          className="w-full"
-                        >
+                        <Button onClick={() => handleUse(cert.id)} disabled={usingId === cert.id} className="w-full">
                           {usingId === cert.id ? 'Использование...' : 'Использовать'}
                         </Button>
                       )}
@@ -159,16 +152,16 @@ export default function CertificatesPage() {
             </div>
           )}
 
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-6 bg-green-50 border-green-200">
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Card className="border-green-200 bg-green-50 p-6">
               <div className="text-3xl font-bold text-green-600">{certificates?.filter((c) => c.status === 'active').length || 0}</div>
               <div className="text-blue-900">Активных</div>
             </Card>
-            <Card className="p-6 bg-gray-50 border-gray-200">
+            <Card className="border-gray-200 bg-gray-50 p-6">
               <div className="text-3xl font-bold text-gray-600">{certificates?.filter((c) => c.status === 'used').length || 0}</div>
               <div className="text-blue-900">Использовано</div>
             </Card>
-            <Card className="p-6 bg-red-50 border-red-200">
+            <Card className="border-red-200 bg-red-50 p-6">
               <div className="text-3xl font-bold text-red-600">{certificates?.filter((c) => c.status === 'expired').length || 0}</div>
               <div className="text-blue-900">Истекло</div>
             </Card>

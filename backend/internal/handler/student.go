@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/cookielearn/backend/internal/middleware"
@@ -19,13 +21,13 @@ func NewStudentHandler(service *service.StudentService) *StudentHandler {
 func (h *StudentHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
 	profile, err := h.service.GetProfile(r.Context(), userID)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РїСЂРѕС„РёР»СЏ")
+		respondError(w, http.StatusInternalServerError, "ошибка получения профиля")
 		return
 	}
 
@@ -35,13 +37,13 @@ func (h *StudentHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 func (h *StudentHandler) GetMyTransactions(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
 	transactions, err := h.service.GetTransactions(r.Context(), userID, 50)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚СЂР°РЅР·Р°РєС†РёР№")
+		respondError(w, http.StatusInternalServerError, "ошибка получения транзакций")
 		return
 	}
 
@@ -51,13 +53,13 @@ func (h *StudentHandler) GetMyTransactions(w http.ResponseWriter, r *http.Reques
 func (h *StudentHandler) GetMyCertificates(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
 	purchases, err := h.service.GetPurchases(r.Context(), userID)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ СЃРµСЂС‚РёС„РёРєР°С‚РѕРІ")
+		respondError(w, http.StatusInternalServerError, "ошибка получения сертификатов")
 		return
 	}
 
@@ -67,7 +69,7 @@ func (h *StudentHandler) GetMyCertificates(w http.ResponseWriter, r *http.Reques
 func (h *StudentHandler) ClaimDailyBonus(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
@@ -77,17 +79,17 @@ func (h *StudentHandler) ClaimDailyBonus(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]interface{}{
+	respondJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"bonus":   bonus,
-		"message": "Р’С‹ РїРѕР»СѓС‡РёР»Рё 1 РїРµС‡РµРЅСЊРєСѓ!",
+		"message": "Ежедневный бонус получен",
 	})
 }
 
 func (h *StudentHandler) GetLeaderboard(w http.ResponseWriter, r *http.Request) {
 	leaderboard, err := h.service.GetLeaderboard(r.Context(), 20)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р»РёРґРµСЂР±РѕСЂРґР°")
+		respondError(w, http.StatusInternalServerError, "ошибка получения лидерборда")
 		return
 	}
 
@@ -97,13 +99,13 @@ func (h *StudentHandler) GetLeaderboard(w http.ResponseWriter, r *http.Request) 
 func (h *StudentHandler) UseCertificate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
 	purchaseID := chi.URLParam(r, "id")
 	if purchaseID == "" {
-		respondError(w, http.StatusBadRequest, "РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ ID СЃРµСЂС‚РёС„РёРєР°С‚Р°")
+		respondError(w, http.StatusBadRequest, "требуется id сертификата")
 		return
 	}
 
@@ -112,8 +114,35 @@ func (h *StudentHandler) UseCertificate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]interface{}{
+	respondJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"message": "РЎРµСЂС‚РёС„РёРєР°С‚ РѕС‚РјРµС‡РµРЅ РєР°Рє РёСЃРїРѕР»СЊР·РѕРІР°РЅРЅС‹Р№",
+		"message": "Сертификат отмечен как использованный",
 	})
+}
+
+func (h *StudentHandler) SyncProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	var req struct {
+		FullName  string  `json:"full_name"`
+		GroupName *string `json:"group_name"`
+		Role      string  `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err != io.EOF {
+		respondError(w, http.StatusBadRequest, "неверное тело запроса")
+		return
+	}
+
+	profile, err := h.service.SyncProfile(r.Context(), userID, req.FullName, req.GroupName, req.Role)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, profile)
 }

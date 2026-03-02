@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "@/components/providers";
-
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+﻿import type { Metadata } from 'next'
+import './globals.css'
+import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
-  title: "CookieLearn - Геймификация обучения",
-  description: "Зарабатывайте печеньки за активность в учёбе",
-};
+  title: 'CookieLearn - Геймификация обучения',
+  description: 'Зарабатывайте печеньки за активность в учебе и обменивайте их на привилегии',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="ru">
-      <body className={inter.className}>
-        <Providers>
-          {children}
-        </Providers>
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }

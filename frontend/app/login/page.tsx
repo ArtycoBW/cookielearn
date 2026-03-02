@@ -1,10 +1,13 @@
-"use client"
+﻿"use client"
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -19,15 +22,27 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        throw error
+      }
+
+      const fullName = data.user?.user_metadata?.full_name || data.user?.email || 'Пользователь'
+      const role = data.user?.user_metadata?.role || 'student'
+      const groupName = data.user?.user_metadata?.group_name
+
+      await api.post('/api/auth/sync', {
+        full_name: fullName,
+        role,
+        group_name: groupName,
       })
 
-      if (error) throw error
-
       toast.success('Добро пожаловать! 🍪')
-      router.push('/dashboard')
+      if (role === 'admin') {
+        router.push('/admin/stats')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (error: any) {
       toast.error(error.message || 'Ошибка входа')
     } finally {
@@ -36,69 +51,58 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100">
+        <div className="rounded-2xl border border-blue-100 bg-white p-8 shadow-xl">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="text-center mb-8"
+            className="mb-8 text-center"
           >
-            <div className="text-6xl mb-4">🍪</div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-              CookieLearn
-            </h1>
-            <p className="text-blue-600/70 mt-2">Вход в систему</p>
+            <div className="mb-4 text-6xl">🍪</div>
+            <h1 className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-3xl font-bold text-transparent">CookieLearn</h1>
+            <p className="mt-2 text-blue-600/70">Вход в систему</p>
           </motion.div>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-blue-900 mb-2">
-                Email
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-blue-100 rounded-lg focus:border-blue-500 focus:outline-none transition-smooth"
                 placeholder="student@example.com"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-blue-900 mb-2">
-                Пароль
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-blue-100 rounded-lg focus:border-blue-500 focus:outline-none transition-smooth"
                 placeholder="••••••••"
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              isLoading={isLoading}
-            >
+            <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
               Войти
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-blue-600/60">
             <p>Тестовый аккаунт:</p>
-            <p className="font-mono mt-1">student@test.com / password123</p>
+            <p className="mt-1 font-mono">student@test.com / password123</p>
           </div>
         </div>
 
@@ -108,11 +112,11 @@ export default function LoginPage() {
           transition={{ delay: 0.6 }}
           className="mt-6 text-center text-sm text-blue-600/50"
         >
-          CookieLearn © 2026 - Геймификация обучения
+          CookieLearn © 2026
         </motion.div>
       </motion.div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {[...Array(5)].map((_, i) => (
           <motion.div
             key={i}

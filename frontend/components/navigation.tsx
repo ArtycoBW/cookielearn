@@ -1,21 +1,50 @@
-"use client"
+﻿"use client"
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Home, ShoppingBag, Award, History, Trophy, LogOut, Menu, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Award,
+  BarChart3,
+  ClipboardList,
+  Gift,
+  History,
+  Home,
+  LogOut,
+  Menu,
+  Shield,
+  ShoppingBag,
+  Trophy,
+  Users,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import { useProfile } from '@/lib/queries'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
+type NavItem = {
+  href: string
+  label: string
+  icon: LucideIcon
+}
+
+const studentNavItems: NavItem[] = [
+  { href: '/dashboard', label: 'Дашборд', icon: Home },
   { href: '/shop', label: 'Магазин', icon: ShoppingBag },
   { href: '/my-certificates', label: 'Сертификаты', icon: Award },
   { href: '/history', label: 'История', icon: History },
   { href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
+]
+
+const adminNavItems: NavItem[] = [
+  { href: '/admin/stats', label: 'Статистика', icon: BarChart3 },
+  { href: '/admin/students', label: 'Студенты', icon: Users },
+  { href: '/admin/award', label: 'Начисления', icon: Gift },
+  { href: '/admin/certificates', label: 'Сертификаты', icon: Shield },
+  { href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
 ]
 
 export function Navigation() {
@@ -25,70 +54,62 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  // Закрываем мобильное меню при смене маршрута
+  const isAdmin = profile?.role === 'admin'
+  const navItems = useMemo(() => (isAdmin ? adminNavItems : studentNavItems), [isAdmin])
+  const logoHref = isAdmin ? '/admin/stats' : '/dashboard'
+
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [pathname])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
+
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
       toast.success('Вы успешно вышли из системы')
       router.push('/login')
-    } catch (error) {
+    } catch {
       toast.error('Ошибка при выходе')
       setIsLoggingOut(false)
     }
   }
 
+  const isActiveItem = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+
   return (
     <>
-      {/* Desktop Navigation */}
-      <nav className="hidden md:block sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg border-b border-blue-400/20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 group">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-                className="text-3xl"
-              >
+      <nav className="sticky top-0 z-50 hidden border-b border-blue-400/20 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg md:block">
+        <div className="mx-auto h-16 w-full max-w-7xl px-6">
+          <div className="flex h-full items-center justify-between gap-4">
+            <Link href={logoHref} className="group flex shrink-0 items-center gap-2">
+              <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="text-2xl">
                 🍪
               </motion.div>
-              <span className="text-xl font-bold text-white group-hover:text-blue-100 transition-colors">
-                CookieLearn
-              </span>
+              <span className="text-xl font-bold text-white transition-colors group-hover:text-blue-100">CookieLearn</span>
             </Link>
 
-            <div className="flex items-center gap-1">
+            <div className="flex flex-1 items-center justify-center gap-1">
               {navItems.map((item) => {
-                const isActive = pathname === item.href
+                const isActive = isActiveItem(item.href)
                 const Icon = item.icon
 
                 return (
                   <Link key={item.href} href={item.href}>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="relative"
-                    >
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
                       <div
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                          isActive
-                            ? 'bg-white text-blue-600 shadow-lg'
-                            : 'text-blue-50 hover:bg-blue-500/50 hover:text-white'
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all xl:px-4 ${
+                          isActive ? 'bg-white text-blue-600 shadow-lg' : 'text-blue-50 hover:bg-blue-500/50 hover:text-white'
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium">{item.label}</span>
+                        <Icon className="h-4 w-4" />
+                        <span className="font-medium whitespace-nowrap">{item.label}</span>
                       </div>
                       {isActive && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute -bottom-3 left-0 right-0 h-1 bg-white rounded-t-full"
+                          className="absolute -bottom-3 left-0 right-0 h-1 rounded-t-full bg-white"
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       )}
@@ -98,27 +119,24 @@ export function Navigation() {
               })}
             </div>
 
-            {/* User Info & Logout */}
-            <div className="flex items-center gap-4">
-              {/* Balance Display */}
+            <div className="flex shrink-0 items-center gap-4">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20"
+                className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm"
               >
-                <span className="text-white/80 text-sm font-medium">Баланс:</span>
-                <span className="text-2xl font-bold text-white">{profile?.balance || 0}</span>
+                <span className="text-sm font-medium text-white/80">Баланс:</span>
+                <span className="text-2xl font-bold text-white">{profile?.balance ?? 0}</span>
                 <span className="text-2xl">🍪</span>
               </motion.div>
 
-              {/* Logout Button */}
               <Button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
                 variant="outline"
-                className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white hover:text-blue-600 transition-all"
+                className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white hover:text-blue-600"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
                 {isLoggingOut ? 'Выход...' : 'Выйти'}
               </Button>
             </div>
@@ -126,34 +144,29 @@ export function Navigation() {
         </div>
       </nav>
 
-      {/* Mobile Navigation */}
-      <nav className="md:hidden sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg border-b border-blue-400/20">
+      <nav className="sticky top-0 z-50 border-b border-blue-400/20 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg md:hidden">
         <div className="px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="flex h-16 items-center justify-between gap-2">
+            <Link href={logoHref} className="flex min-w-0 items-center gap-2">
               <span className="text-2xl">🍪</span>
-              <span className="text-lg font-bold text-white">CookieLearn</span>
+              <span className="truncate text-lg font-bold text-white">CookieLearn</span>
             </Link>
 
-            {/* Balance */}
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-              <span className="text-lg font-bold text-white">{profile?.balance || 0}</span>
+            <div className="flex shrink-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-sm">
+              <span className="text-lg font-bold text-white">{profile?.balance ?? 0}</span>
               <span className="text-lg">🍪</span>
             </div>
 
-            {/* Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+              className="shrink-0 rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -163,35 +176,32 @@ export function Navigation() {
               transition={{ duration: 0.2 }}
               className="border-t border-blue-400/20 bg-blue-600"
             >
-              <div className="px-4 py-4 space-y-2">
+              <div className="space-y-2 px-4 py-4">
                 {navItems.map((item) => {
-                  const isActive = pathname === item.href
+                  const isActive = isActiveItem(item.href)
                   const Icon = item.icon
 
                   return (
                     <Link key={item.href} href={item.href}>
                       <motion.div
                         whileTap={{ scale: 0.98 }}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                          isActive
-                            ? 'bg-white text-blue-600 shadow-lg'
-                            : 'text-blue-50 hover:bg-blue-500/50'
+                        className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
+                          isActive ? 'bg-white text-blue-600 shadow-lg' : 'text-blue-50 hover:bg-blue-500/50'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
+                        <Icon className="h-5 w-5" />
                         <span className="font-medium">{item.label}</span>
                       </motion.div>
                     </Link>
                   )
                 })}
 
-                {/* Mobile Logout Button */}
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-blue-50 hover:bg-red-500/50 transition-all"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-blue-50 transition-all hover:bg-red-500/50"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="h-5 w-5" />
                   <span className="font-medium">{isLoggingOut ? 'Выход...' : 'Выйти'}</span>
                 </button>
               </div>

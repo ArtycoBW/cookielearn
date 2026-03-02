@@ -21,7 +21,7 @@ func NewShopHandler(service *service.ShopService) *ShopHandler {
 func (h *ShopHandler) GetCertificates(w http.ResponseWriter, r *http.Request) {
 	certificates, err := h.service.GetCertificates(r.Context())
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "РѕС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ СЃРµСЂС‚РёС„РёРєР°С‚РѕРІ")
+		respondError(w, http.StatusInternalServerError, "ошибка получения сертификатов")
 		return
 	}
 
@@ -31,13 +31,13 @@ func (h *ShopHandler) GetCertificates(w http.ResponseWriter, r *http.Request) {
 func (h *ShopHandler) BuyCertificate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
 	certID := chi.URLParam(r, "id")
 	if certID == "" {
-		respondError(w, http.StatusBadRequest, "РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ ID СЃРµСЂС‚РёС„РёРєР°С‚Р°")
+		respondError(w, http.StatusBadRequest, "отсутствует ID сертификата")
 		return
 	}
 
@@ -47,17 +47,17 @@ func (h *ShopHandler) BuyCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]interface{}{
+	respondJSON(w, http.StatusOK, map[string]any{
 		"success":  true,
 		"purchase": purchase,
-		"message":  "РЎРµСЂС‚РёС„РёРєР°С‚ СѓСЃРїРµС€РЅРѕ РєСѓРїР»РµРЅ!",
+		"message":  "Сертификат успешно куплен!",
 	})
 }
 
 func (h *ShopHandler) BuyRandomBonus(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
-		respondError(w, http.StatusUnauthorized, "РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ")
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *ShopHandler) BuyRandomBonus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "РЅРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ Р·Р°РїСЂРѕСЃР°")
+		respondError(w, http.StatusBadRequest, "неверный формат запроса")
 		return
 	}
 
@@ -80,10 +80,10 @@ func (h *ShopHandler) BuyRandomBonus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]interface{}{
+	respondJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"cost":    req.Cost,
 		"reward":  reward,
-		"message": "Р’С‹ РІС‹РёРіСЂР°Р»Рё " + strconv.Itoa(reward) + " РїРµС‡РµРЅРµРє!",
+		"message": "Вы выиграли " + strconv.Itoa(reward) + " печенек!",
 	})
 }

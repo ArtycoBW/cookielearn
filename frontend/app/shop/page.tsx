@@ -1,7 +1,9 @@
-"use client"
+﻿"use client"
 
-import { motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
+import { X } from 'lucide-react'
 import { useShopCertificates, useBuyCertificate, useBuyRandomBonus, useProfile } from '@/lib/queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
@@ -10,12 +12,29 @@ import { Navigation } from '@/components/navigation'
 import { toast } from 'sonner'
 
 const RANDOM_BONUS_COST = 3
+const WHEEL_PRIZES = [1, 2, 3, 4, 5]
+const SEGMENT_ANGLE = 360 / WHEEL_PRIZES.length
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default function ShopPage() {
   const { data: certificates, isLoading } = useShopCertificates()
   const { data: profile } = useProfile()
   const buyCertificate = useBuyCertificate()
   const buyRandomBonus = useBuyRandomBonus()
+
+  const [wheelRotation, setWheelRotation] = useState(0)
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [isWheelOverlayOpen, setIsWheelOverlayOpen] = useState(false)
+  const [lastReward, setLastReward] = useState<number | null>(null)
+  const [lastCost, setLastCost] = useState<number | null>(null)
+  const [wheelError, setWheelError] = useState<string | null>(null)
+
+  const wheelGradient = useMemo(
+    () =>
+      'conic-gradient(from -90deg, #2563eb 0deg 72deg, #3b82f6 72deg 144deg, #60a5fa 144deg 216deg, #93c5fd 216deg 288deg, #1d4ed8 288deg 360deg)',
+    [],
+  )
 
   const handleBuy = async (certId: string, title: string, price: number) => {
     if (!profile || profile.balance < price) {
@@ -39,86 +58,176 @@ export default function ShopPage() {
     }
   }
 
-  const handleRandomBonus = async () => {
+  const runWheelSpin = async () => {
     if (!profile || profile.balance < RANDOM_BONUS_COST) {
       toast.error('Недостаточно печенек для случайного бонуса')
       return
     }
 
+    if (isSpinning) {
+      return
+    }
+
+    setIsSpinning(true)
+    setWheelError(null)
+
     try {
-      const result = await buyRandomBonus.mutateAsync(RANDOM_BONUS_COST) as { reward: number; cost: number }
+      const result = (await buyRandomBonus.mutateAsync(RANDOM_BONUS_COST)) as { reward: number; cost: number }
+      const rewardIndex = WHEEL_PRIZES.findIndex((value) => value === result.reward)
+
+      if (rewardIndex < 0) {
+        throw new Error('Некорректный результат бонуса')
+      }
+
+      const targetAngle = 360 - (rewardIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2)
+      const currentAngle = ((wheelRotation % 360) + 360) % 360
+      let delta = targetAngle - currentAngle
+      if (delta < 0) {
+        delta += 360
+      }
+
+      setWheelRotation((prev) => prev + 360 * 6 + delta)
+      setLastReward(result.reward)
+      setLastCost(result.cost)
+
+      await sleep(4300)
 
       confetti({
-        particleCount: 120,
-        spread: 80,
+        particleCount: 150,
+        spread: 90,
         origin: { y: 0.55 },
-        colors: ['#2563eb', '#3b82f6', '#60a5fa'],
+        colors: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'],
       })
 
       toast.success(`Вы потратили ${result.cost} 🍪 и получили ${result.reward} 🍪`)
     } catch (error: any) {
-      toast.error(error.message)
+      const message = error?.message || 'Ошибка вращения колеса'
+      setWheelError(message)
+      toast.error(message)
+    } finally {
+      setIsSpinning(false)
     }
+  }
+
+  const openOverlayAndSpin = async () => {
+    if (!profile || profile.balance < RANDOM_BONUS_COST) {
+      toast.error('Недостаточно печенек для случайного бонуса')
+      return
+    }
+
+    setIsWheelOverlayOpen(true)
+    await sleep(220)
+    await runWheelSpin()
+  }
+
+  const renderWheel = (size: number) => {
+    const labelDistance = size * 0.36
+    const labelFontSize = Math.max(20, Math.floor(size * 0.075))
+    const pointerSide = Math.max(14, Math.floor(size * 0.05))
+    const pointerHeight = Math.max(20, Math.floor(size * 0.08))
+    const pointerOffset = Math.max(12, Math.floor(size * 0.04))
+    const centerSize = Math.max(50, Math.floor(size * 0.2))
+
+    return (
+      <div className="relative" style={{ width: size, height: size }}>
+        <div
+          className="absolute left-1/2 z-20 h-0 w-0 -translate-x-1/2"
+          style={{
+            top: -pointerOffset,
+            borderLeft: `${pointerSide}px solid transparent`,
+            borderRight: `${pointerSide}px solid transparent`,
+            borderTop: `${pointerHeight}px solid white`,
+            filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.2))',
+          }}
+        />
+
+        <div
+          className="relative h-full w-full rounded-full border-4 border-white/70 shadow-2xl"
+          style={{
+            background: wheelGradient,
+            transform: `rotate(${wheelRotation}deg)`,
+            transition: isSpinning ? 'transform 4.2s cubic-bezier(0.17, 0.67, 0.12, 1)' : undefined,
+          }}
+        >
+          {WHEEL_PRIZES.map((prize, index) => {
+            const angle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2
+            return (
+              <div
+                key={prize}
+                className="absolute left-1/2 top-1/2 font-bold text-white"
+                style={{
+                  fontSize: labelFontSize,
+                  transform: `rotate(${angle}deg) translateY(-${labelDistance}px) rotate(${-angle}deg)`,
+                  transformOrigin: 'center',
+                }}
+              >
+                {prize}
+              </div>
+            )
+          })}
+
+          <div
+            className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70 bg-blue-700/90"
+            style={{ width: centerSize, height: centerSize }}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (
     <>
       <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-7xl mx-auto p-6 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-2"
-          >
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">Магазин сертификатов 🛍️</h1>
+        <div className="mx-auto max-w-7xl space-y-6 p-6">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+            <h1 className="mb-2 text-4xl font-bold text-blue-900">Магазин сертификатов 🛍️</h1>
             <p className="text-blue-600/70">Обменивайте свои печеньки на привилегии</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
-          >
-            <Card className="bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
-              <CardContent className="pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <Card className="border-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+              <CardContent className="grid gap-6 pt-6 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
-                  <p className="text-blue-100 text-sm">Случайный бонус</p>
-                  <p className="text-2xl md:text-3xl font-bold">Заплатите {RANDOM_BONUS_COST} 🍪 и получите 1-5 🍪</p>
+                  <p className="text-sm text-blue-100">Случайный бонус</p>
+                  <p className="text-2xl font-bold md:text-3xl">Заплатите {RANDOM_BONUS_COST} 🍪 и получите от 1 до 5 🍪</p>
                 </div>
-                <Button
-                  onClick={handleRandomBonus}
-                  isLoading={buyRandomBonus.isPending}
-                  disabled={!profile || profile.balance < RANDOM_BONUS_COST}
-                  className="bg-white text-blue-700 hover:bg-blue-50"
-                >
-                  Крутить бонус
-                </Button>
+
+                <div className="mx-auto flex w-full max-w-[420px] flex-col items-center gap-4 rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
+                  {renderWheel(220)}
+
+                  <Button
+                    onClick={openOverlayAndSpin}
+                    disabled={!profile || profile.balance < RANDOM_BONUS_COST || isSpinning}
+                    className="w-full bg-white text-blue-700 hover:bg-blue-50"
+                  >
+                    {isSpinning ? 'Крутится...' : 'Крутить бонус'}
+                  </Button>
+
+                  <p className="text-sm text-blue-50/90">
+                    {lastReward == null ? 'Последний приз: —' : `Последний приз: +${lastReward} 🍪`}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-80 bg-white rounded-xl border border-blue-100 animate-pulse" />
+                <div key={i} className="h-80 animate-pulse rounded-xl border border-blue-100 bg-white" />
               ))}
             </div>
           ) : certificates && certificates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {certificates.map((cert, i) => (
-                <motion.div
-                  key={cert.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.06 }}
-                >
-                  <Card className="h-full flex flex-col">
+                <motion.div key={cert.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }}>
+                  <Card className="flex h-full flex-col">
                     <CardHeader>
-                      <div className="flex items-start justify-between mb-2 gap-2">
+                      <div className="mb-2 flex items-start justify-between gap-2">
                         <CardTitle className="text-lg">{cert.title}</CardTitle>
                         {cert.remaining_quantity != null && cert.remaining_quantity < 5 && (
-                          <Badge variant="warning" className="whitespace-nowrap shrink-0">
+                          <Badge variant="warning" className="shrink-0 whitespace-nowrap">
                             Осталось: {cert.remaining_quantity}
                           </Badge>
                         )}
@@ -139,14 +248,14 @@ export default function ShopPage() {
                         {cert.inflation_step > 0 && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-blue-600/70">Рост цены</span>
-                            <span className="text-blue-900 font-medium">+{cert.inflation_step} 🍪</span>
+                            <span className="font-medium text-blue-900">+{cert.inflation_step} 🍪</span>
                           </div>
                         )}
 
                         {cert.validity_days && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-blue-600/70">Срок действия</span>
-                            <span className="text-blue-900 font-medium">{cert.validity_days} дней</span>
+                            <span className="font-medium text-blue-900">{cert.validity_days} дней</span>
                           </div>
                         )}
                       </div>
@@ -167,13 +276,83 @@ export default function ShopPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-4">🛍️</div>
+            <div className="py-20 text-center">
+              <div className="mb-4 text-6xl">🛍️</div>
               <p className="text-xl text-blue-600/70">Сертификаты пока недоступны</p>
             </div>
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {isWheelOverlayOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] bg-blue-950/70 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.28 }}
+              className="relative flex h-full w-full items-center justify-center p-6"
+            >
+              <div className="relative flex h-full w-full max-w-6xl flex-col items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-blue-600 to-blue-500 p-6 text-white shadow-2xl">
+                <button
+                  className="absolute right-5 top-5 rounded-full bg-white/20 p-2 transition hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => setIsWheelOverlayOpen(false)}
+                  disabled={isSpinning}
+                  aria-label="Закрыть"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <h2 className="text-center text-2xl font-bold md:text-4xl">Колесо случайного бонуса</h2>
+                <p className="mt-2 text-center text-sm text-blue-100 md:text-lg">Заплатите {RANDOM_BONUS_COST} 🍪 и получите от 1 до 5 🍪</p>
+
+                <div className="mt-8">{renderWheel(430)}</div>
+
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  <div className="text-lg font-semibold md:text-2xl">
+                    {isSpinning
+                      ? 'Колесо крутится...'
+                      : wheelError
+                        ? `Ошибка: ${wheelError}`
+                        : lastReward == null
+                          ? 'Готово к запуску'
+                          : `Выигрыш: +${lastReward} 🍪`}
+                  </div>
+
+                  {!isSpinning && lastReward != null && lastCost != null && (
+                    <p className="text-blue-100">Потрачено: {lastCost} 🍪</p>
+                  )}
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button
+                      onClick={runWheelSpin}
+                      disabled={!profile || profile.balance < RANDOM_BONUS_COST || isSpinning}
+                      className="bg-white text-blue-700 hover:bg-blue-50"
+                    >
+                      {isSpinning ? 'Крутится...' : 'Крутить еще раз'}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsWheelOverlayOpen(false)}
+                      disabled={isSpinning}
+                      className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    >
+                      Закрыть
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
