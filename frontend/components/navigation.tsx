@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/shop', label: 'Магазин', icon: ShoppingBag },
-  { href: '/certificates', label: 'Сертификаты', icon: Award },
+  { href: '/my-certificates', label: 'Сертификаты', icon: Award },
   { href: '/history', label: 'История', icon: History },
   { href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
 ]

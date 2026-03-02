@@ -2,17 +2,20 @@
 
 import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { useShopCertificates, useBuyCertificate, useProfile } from '@/lib/queries'
+import { useShopCertificates, useBuyCertificate, useBuyRandomBonus, useProfile } from '@/lib/queries'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Navigation } from '@/components/navigation'
 import { toast } from 'sonner'
 
+const RANDOM_BONUS_COST = 3
+
 export default function ShopPage() {
   const { data: certificates, isLoading } = useShopCertificates()
   const { data: profile } = useProfile()
   const buyCertificate = useBuyCertificate()
+  const buyRandomBonus = useBuyRandomBonus()
 
   const handleBuy = async (certId: string, title: string, price: number) => {
     if (!profile || profile.balance < price) {
@@ -22,15 +25,37 @@ export default function ShopPage() {
 
     try {
       await buyCertificate.mutateAsync(certId)
-      
+
       confetti({
         particleCount: 150,
         spread: 100,
         origin: { y: 0.6 },
-        colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe']
+        colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'],
       })
-      
+
       toast.success(`Сертификат "${title}" успешно куплен! 🎉`)
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleRandomBonus = async () => {
+    if (!profile || profile.balance < RANDOM_BONUS_COST) {
+      toast.error('Недостаточно печенек для случайного бонуса')
+      return
+    }
+
+    try {
+      const result = await buyRandomBonus.mutateAsync(RANDOM_BONUS_COST) as { reward: number; cost: number }
+
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.55 },
+        colors: ['#2563eb', '#3b82f6', '#60a5fa'],
+      })
+
+      toast.success(`Вы потратили ${result.cost} 🍪 и получили ${result.reward} 🍪`)
     } catch (error: any) {
       toast.error(error.message)
     }
@@ -40,18 +65,37 @@ export default function ShopPage() {
     <>
       <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-2"
           >
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">
-              Магазин сертификатов 🛍️
-            </h1>
-            <p className="text-blue-600/70">
-              Обменяйте свои печеньки на привилегии
-            </p>
+            <h1 className="text-4xl font-bold text-blue-900 mb-2">Магазин сертификатов 🛍️</h1>
+            <p className="text-blue-600/70">Обменивайте свои печеньки на привилегии</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+          >
+            <Card className="bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0">
+              <CardContent className="pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <p className="text-blue-100 text-sm">Случайный бонус</p>
+                  <p className="text-2xl md:text-3xl font-bold">Заплатите {RANDOM_BONUS_COST} 🍪 и получите 1-5 🍪</p>
+                </div>
+                <Button
+                  onClick={handleRandomBonus}
+                  isLoading={buyRandomBonus.isPending}
+                  disabled={!profile || profile.balance < RANDOM_BONUS_COST}
+                  className="bg-white text-blue-700 hover:bg-blue-50"
+                >
+                  Крутить бонус
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
 
           {isLoading ? (
@@ -67,11 +111,11 @@ export default function ShopPage() {
                   key={cert.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: i * 0.06 }}
                 >
                   <Card className="h-full flex flex-col">
                     <CardHeader>
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between mb-2 gap-2">
                         <CardTitle className="text-lg">{cert.title}</CardTitle>
                         {cert.remaining_quantity != null && cert.remaining_quantity < 5 && (
                           <Badge variant="warning" className="whitespace-nowrap shrink-0">
@@ -115,10 +159,7 @@ export default function ShopPage() {
                         disabled={!profile || profile.balance < cert.current_price}
                         className="w-full"
                       >
-                        {!profile || profile.balance < cert.current_price ? 
-                          'Недостаточно печенек' : 
-                          'Купить'
-                        }
+                        {!profile || profile.balance < cert.current_price ? 'Недостаточно печенек' : 'Купить'}
                       </Button>
                     </CardFooter>
                   </Card>

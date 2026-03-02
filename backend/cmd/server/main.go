@@ -80,6 +80,7 @@ func main() {
 		r.Get("/me", studentHandler.GetMe)
 		r.Get("/me/transactions", studentHandler.GetMyTransactions)
 		r.Get("/me/certificates", studentHandler.GetMyCertificates)
+		r.Post("/me/certificates/{id}/use", studentHandler.UseCertificate)
 		r.Post("/me/daily-bonus", studentHandler.ClaimDailyBonus)
 
 		r.Get("/leaderboard", studentHandler.GetLeaderboard)

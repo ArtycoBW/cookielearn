@@ -84,3 +84,22 @@ func (r *PurchaseRepository) UpdateStatus(ctx context.Context, id, status string
 
 	return nil
 }
+
+func (r *PurchaseRepository) MarkAsUsed(ctx context.Context, purchaseID, userID string) error {
+	query := `
+		UPDATE purchases
+		SET status = 'used', used_at = NOW()
+		WHERE id = $1 AND user_id = $2 AND status = 'active'
+	`
+
+	result, err := r.db.Pool.Exec(ctx, query, purchaseID, userID)
+	if err != nil {
+		return fmt.Errorf("mark purchase as used: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("сертификат не найден или уже использован")
+	}
+
+	return nil
+}

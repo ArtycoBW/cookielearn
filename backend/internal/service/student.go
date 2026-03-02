@@ -79,3 +79,15 @@ func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*mode
 	}
 	return s.profileRepo.GetLeaderboard(ctx, limit)
 }
+
+func (s *StudentService) UseCertificate(ctx context.Context, userID, purchaseID string) error {
+	if purchaseID == "" {
+		return fmt.Errorf("отсутствует ID сертификата")
+	}
+
+	if err := s.purchRepo.MarkAsUsed(ctx, purchaseID, userID); err != nil {
+		return err
+	}
+
+	return nil
+}
