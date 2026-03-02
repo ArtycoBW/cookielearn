@@ -63,7 +63,6 @@ export function Navigation() {
               </span>
             </Link>
 
-            {/* Navigation Items */}
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href
@@ -89,7 +88,7 @@ export function Navigation() {
                       {isActive && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute -bottom-1 left-0 right-0 h-1 bg-white rounded-t-full"
+                          className="absolute -bottom-3 left-0 right-0 h-1 bg-white rounded-t-full"
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       )}

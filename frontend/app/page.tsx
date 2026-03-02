@@ -1,6 +1,15 @@
-"use client";
+﻿"use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Home() {
   return (
@@ -19,7 +28,7 @@ export default function Home() {
         >
           🍪
         </motion.div>
-        
+
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -28,7 +37,7 @@ export default function Home() {
         >
           CookieLearn
         </motion.h1>
-        
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -37,7 +46,7 @@ export default function Home() {
         >
           Геймификация обучения
         </motion.p>
-        
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -54,12 +63,60 @@ export default function Home() {
           transition={{ delay: 1 }}
           className="mt-8 flex gap-4 justify-center"
         >
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-smooth hover-lift">
+          <Link
+            href="/login"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-smooth hover-lift"
+          >
             Войти
-          </button>
-          <button className="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-smooth">
-            Узнать больше
-          </button>
+          </Link>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-smooth">
+                Узнать больше
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>О платформе CookieLearn</DialogTitle>
+                <DialogDescription>
+                  Небольшой обзор возможностей для студентов и преподавателей.
+                </DialogDescription>
+              </DialogHeader>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="space-y-3"
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.08, duration: 0.25 }}
+                  className="rounded-lg bg-blue-50 p-3 text-blue-900/80"
+                >
+                  Получайте печеньки за активность, задания и ежедневные бонусы.
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.16, duration: 0.25 }}
+                  className="rounded-lg bg-blue-50 p-3 text-blue-900/80"
+                >
+                  Обменивайте награды в магазине и отслеживайте покупки в истории.
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.24, duration: 0.25 }}
+                  className="rounded-lg bg-blue-50 p-3 text-blue-900/80"
+                >
+                  Соревнуйтесь в лидерборде и повышайте личный рейтинг.
+                </motion.div>
+              </motion.div>
+            </DialogContent>
+          </Dialog>
         </motion.div>
       </motion.div>
 

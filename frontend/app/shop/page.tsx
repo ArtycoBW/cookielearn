@@ -73,8 +73,8 @@ export default function ShopPage() {
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
                         <CardTitle className="text-lg">{cert.title}</CardTitle>
-                        {cert.remaining_quantity !== null && cert.remaining_quantity < 5 && (
-                          <Badge variant="warning">
+                        {cert.remaining_quantity != null && cert.remaining_quantity < 5 && (
+                          <Badge variant="warning" className="whitespace-nowrap shrink-0">
                             Осталось: {cert.remaining_quantity}
                           </Badge>
                         )}

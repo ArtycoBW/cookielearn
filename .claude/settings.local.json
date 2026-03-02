@@ -11,7 +11,13 @@
       "Bash(TMP=/tmp TEMP=/tmp git init:*)",
       "Bash(go version:*)",
       "Bash(where:*)",
-      "mcp__filesystem__read_media_file"
+      "mcp__filesystem__read_media_file",
+      "Bash(powershell -Command:*)",
+      "Bash(cmd /c \"if not exist g:\\\\web\\\\frontend\\\\app\\\\certificates mkdir g:\\\\web\\\\frontend\\\\app\\\\certificates\")",
+      "mcp__filesystem__edit_file",
+      "mcp__filesystem__search_files",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_multiple_files"
     ]
   }
 }
