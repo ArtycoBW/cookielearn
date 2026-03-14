@@ -178,14 +178,14 @@ export default function ShopPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="min-h-screen page-theme-gradient">
         <div className="mx-auto max-w-7xl space-y-6 p-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
             <h1 className="mb-2 text-4xl font-bold text-blue-900">Магазин сертификатов 🛍️</h1>
             <p className="text-blue-600/70">Обменивайте свои печеньки на привилегии</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          {/* <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
             <Card className="border-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
               <CardContent className="grid gap-6 pt-6 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
@@ -210,7 +210,7 @@ export default function ShopPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </motion.div> */}
 
           {isLoading ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -356,3 +356,4 @@ export default function ShopPage() {
     </>
   )
 }
+

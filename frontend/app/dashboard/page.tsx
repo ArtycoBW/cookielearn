@@ -50,7 +50,7 @@ export default function DashboardPage() {
     return (
       <>
         <Navigation />
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
+        <div className="flex min-h-screen items-center justify-center page-theme-gradient">
           <div className="text-4xl">🍪</div>
         </div>
       </>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="min-h-screen page-theme-gradient">
         <div className="mx-auto max-w-7xl p-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <h1 className="mb-2 text-4xl font-bold text-blue-900">Привет, {profile?.full_name}! 👋</h1>
@@ -158,3 +158,4 @@ export default function DashboardPage() {
     </>
   )
 }
+

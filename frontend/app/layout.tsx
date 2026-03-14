@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from '@/components/providers'
+import { AnimatedBackground } from '@/components/animated-background'
 
 export const metadata: Metadata = {
   title: 'CookieLearn - Геймификация обучения',
@@ -13,9 +14,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <AnimatedBackground />
+          <div className="app-shell">{children}</div>
+        </Providers>
       </body>
     </html>
   )

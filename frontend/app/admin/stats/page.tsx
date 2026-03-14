@@ -21,7 +21,7 @@ export default function AdminStatsPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="min-h-screen page-theme-gradient">
         <div className="mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1400px] flex-col gap-6 p-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="mb-2 text-4xl font-bold text-blue-900">Админ-статистика</h1>
@@ -88,3 +88,4 @@ export default function AdminStatsPage() {
     </>
   )
 }
+

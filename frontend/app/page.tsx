@@ -13,7 +13,7 @@ import {
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center page-theme-gradient p-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -138,3 +138,4 @@ export default function Home() {
     </main>
   )
 }
+

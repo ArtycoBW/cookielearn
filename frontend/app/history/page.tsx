@@ -73,7 +73,7 @@ export default function HistoryPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="min-h-screen page-theme-gradient">
         <div className="mx-auto max-w-5xl space-y-6 p-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="mb-2 text-4xl font-bold text-blue-900">История транзакций 📊</h1>
@@ -188,3 +188,4 @@ export default function HistoryPage() {
     </>
   )
 }
+

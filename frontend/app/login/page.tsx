@@ -51,7 +51,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
+    <div className="flex min-h-screen items-center justify-center page-theme-gradient p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -143,3 +143,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

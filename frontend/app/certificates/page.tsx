@@ -75,7 +75,7 @@ export default function CertificatesPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-8">
+      <div className="min-h-screen page-theme-gradient p-8">
         <div className="mx-auto max-w-6xl space-y-8">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-4xl font-bold text-blue-900">Мои сертификаты</h1>
@@ -171,3 +171,4 @@ export default function CertificatesPage() {
     </>
   )
 }
+

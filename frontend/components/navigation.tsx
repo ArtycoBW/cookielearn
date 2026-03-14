@@ -13,6 +13,7 @@ import {
   Home,
   LogOut,
   Menu,
+  Palette,
   Shield,
   ShoppingBag,
   Trophy,
@@ -23,6 +24,8 @@ import {
 import { useProfile } from '@/lib/queries'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTheme, type AppTheme } from '@/components/theme-provider'
 import { toast } from 'sonner'
 
 type NavItem = {
@@ -47,10 +50,17 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
 ]
 
+const themeLabels: Record<AppTheme, string> = {
+  ocean: 'Океан',
+  mint: 'Мята',
+  midnight: 'Ночь',
+}
+
 export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { data: profile } = useProfile()
+  const { theme, setTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -80,14 +90,14 @@ export function Navigation() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 hidden border-b border-blue-400/20 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg md:block">
+      <nav className="theme-nav sticky top-0 z-50 hidden border-b shadow-lg md:block">
         <div className="mx-auto h-16 w-full max-w-7xl px-6">
           <div className="flex h-full items-center justify-between gap-4">
             <Link href={logoHref} className="group flex shrink-0 items-center gap-2">
               <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="text-2xl">
                 🍪
               </motion.div>
-              <span className="text-xl font-bold text-white transition-colors group-hover:text-blue-100">CookieLearn</span>
+              <span className="text-xl font-bold text-white transition-colors group-hover:text-white/90">CookieLearn</span>
             </Link>
 
             <div className="flex flex-1 items-center justify-center gap-1">
@@ -100,11 +110,11 @@ export function Navigation() {
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
                       <div
                         className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all xl:px-4 ${
-                          isActive ? 'bg-white text-blue-600 shadow-lg' : 'text-blue-50 hover:bg-blue-500/50 hover:text-white'
+                          isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
-                        <span className="font-medium whitespace-nowrap">{item.label}</span>
+                        <span className="whitespace-nowrap font-medium">{item.label}</span>
                       </div>
                       {isActive && (
                         <motion.div
@@ -119,11 +129,27 @@ export function Navigation() {
               })}
             </div>
 
-            <div className="flex shrink-0 items-center gap-4">
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="w-[160px]">
+                <Select value={theme} onValueChange={(value: AppTheme) => setTheme(value)}>
+                  <SelectTrigger className="nav-theme-trigger h-10">
+                    <div className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      <SelectValue>{themeLabels[theme]}</SelectValue>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ocean">Океан</SelectItem>
+                    <SelectItem value="mint">Мята</SelectItem>
+                    <SelectItem value="midnight">Ночь</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm"
+                className="nav-balance-chip flex items-center gap-2 rounded-lg px-4 py-2 backdrop-blur-sm"
               >
                 <span className="text-sm font-medium text-white/80">Баланс:</span>
                 <span className="text-2xl font-bold text-white">{profile?.balance ?? 0}</span>
@@ -134,7 +160,7 @@ export function Navigation() {
                 onClick={handleLogout}
                 disabled={isLoggingOut}
                 variant="outline"
-                className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white hover:text-blue-600"
+                className="nav-logout-btn gap-2"
               >
                 <LogOut className="h-4 w-4" />
                 {isLoggingOut ? 'Выход...' : 'Выйти'}
@@ -144,7 +170,7 @@ export function Navigation() {
         </div>
       </nav>
 
-      <nav className="sticky top-0 z-50 border-b border-blue-400/20 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 shadow-lg md:hidden">
+      <nav className="theme-nav sticky top-0 z-50 border-b shadow-lg md:hidden">
         <div className="px-4">
           <div className="flex h-16 items-center justify-between gap-2">
             <Link href={logoHref} className="flex min-w-0 items-center gap-2">
@@ -152,7 +178,7 @@ export function Navigation() {
               <span className="truncate text-lg font-bold text-white">CookieLearn</span>
             </Link>
 
-            <div className="flex shrink-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-sm">
+            <div className="nav-balance-chip flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 backdrop-blur-sm">
               <span className="text-lg font-bold text-white">{profile?.balance ?? 0}</span>
               <span className="text-lg">🍪</span>
             </div>
@@ -174,9 +200,26 @@ export function Navigation() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="border-t border-blue-400/20 bg-blue-600"
+              className="nav-mobile-panel"
             >
               <div className="space-y-2 px-4 py-4">
+                <div className="rounded-lg bg-white/10 p-2">
+                  <div className="mb-2 flex items-center gap-2 text-sm text-white/90">
+                    <Palette className="h-4 w-4" />
+                    Тема: {themeLabels[theme]}
+                  </div>
+                  <Select value={theme} onValueChange={(value: AppTheme) => setTheme(value)}>
+                    <SelectTrigger className="nav-theme-trigger h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ocean">Океан</SelectItem>
+                      <SelectItem value="mint">Мята</SelectItem>
+                      <SelectItem value="midnight">Ночь</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {navItems.map((item) => {
                   const isActive = isActiveItem(item.href)
                   const Icon = item.icon
@@ -186,7 +229,7 @@ export function Navigation() {
                       <motion.div
                         whileTap={{ scale: 0.98 }}
                         className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
-                          isActive ? 'bg-white text-blue-600 shadow-lg' : 'text-blue-50 hover:bg-blue-500/50'
+                          isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
                         }`}
                       >
                         <Icon className="h-5 w-5" />
@@ -199,7 +242,7 @@ export function Navigation() {
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-blue-50 transition-all hover:bg-red-500/50"
+                  className="nav-mobile-logout flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all"
                 >
                   <LogOut className="h-5 w-5" />
                   <span className="font-medium">{isLoggingOut ? 'Выход...' : 'Выйти'}</span>
