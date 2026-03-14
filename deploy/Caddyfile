@@ -1,0 +1,25 @@
+www.cookielearn.ru {
+  redir https://cookielearn.ru{uri} permanent
+}
+
+cookielearn.ru {
+  encode gzip zstd
+
+  header {
+    Referrer-Policy strict-origin-when-cross-origin
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+  }
+
+  handle /api/* {
+    reverse_proxy backend:8080
+  }
+
+  handle /health {
+    reverse_proxy backend:8080
+  }
+
+  handle {
+    reverse_proxy frontend:3000
+  }
+}

@@ -1,0 +1,57 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env.production
+    expose:
+      - "8080"
+    restart: unless-stopped
+    networks:
+      - cookielearn
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN: ${NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN}
+    env_file:
+      - .env.production
+    environment:
+      PORT: "3000"
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - cookielearn
+
+  caddy:
+    image: caddy:2.10-alpine
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - cookielearn
+
+networks:
+  cookielearn:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
