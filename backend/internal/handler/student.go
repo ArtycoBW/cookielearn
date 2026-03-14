@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/cookielearn/backend/internal/middleware"
+	"github.com/cookielearn/backend/internal/model"
 	"github.com/cookielearn/backend/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -87,7 +88,7 @@ func (h *StudentHandler) ClaimDailyBonus(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *StudentHandler) GetLeaderboard(w http.ResponseWriter, r *http.Request) {
-	leaderboard, err := h.service.GetLeaderboard(r.Context(), 20)
+	leaderboard, err := h.service.GetLeaderboard(r.Context(), 0)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "ошибка получения лидерборда")
 		return
@@ -145,4 +146,99 @@ func (h *StudentHandler) SyncProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, profile)
+}
+
+func (h *StudentHandler) GetMySurvey(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	submission, err := h.service.GetSurvey(r.Context(), userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения анкеты")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, submission)
+}
+
+func (h *StudentHandler) SubmitSurvey(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	var req struct {
+		Answers []model.SurveyAnswer `json:"answers"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "неверный формат запроса")
+		return
+	}
+
+	submission, err := h.service.SubmitSurvey(r.Context(), userID, req.Answers)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]any{
+		"success":    true,
+		"submission": submission,
+		"message":    "Анкета успешно отправлена",
+	})
+}
+
+func (h *StudentHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	tasks, err := h.service.GetTasks(r.Context(), userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения заданий")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, tasks)
+}
+
+func (h *StudentHandler) SubmitTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	taskID := chi.URLParam(r, "id")
+	if taskID == "" {
+		respondError(w, http.StatusBadRequest, "task id обязателен")
+		return
+	}
+
+	var req struct {
+		ResponseText *string `json:"response_text"`
+		ResponseURL  *string `json:"response_url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "неверный формат запроса")
+		return
+	}
+
+	submission, err := h.service.SubmitTask(r.Context(), userID, taskID, req.ResponseText, req.ResponseURL)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"success":    true,
+		"submission": submission,
+		"message":    "Ответ отправлен",
+	})
 }

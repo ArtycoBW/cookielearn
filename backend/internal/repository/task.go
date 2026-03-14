@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cookielearn/backend/internal/model"
-	"github.com/jackc/pgx/v5"
 )
 
 type TaskRepository struct {
@@ -19,9 +18,26 @@ func NewTaskRepository(db *DB) *TaskRepository {
 
 func (r *TaskRepository) GetAll(ctx context.Context) ([]*model.Task, error) {
 	query := `
-		SELECT id, title, description, type, reward, deadline, status, created_by, created_at, closed_at
-		FROM tasks
-		ORDER BY created_at DESC
+		SELECT
+			t.id,
+			t.title,
+			t.description,
+			t.type,
+			t.reward,
+			t.deadline,
+			t.status,
+			t.created_by,
+			t.created_at,
+			t.closed_at,
+			COUNT(ts.id)::INT AS submission_count,
+			(COUNT(ts.id) FILTER (WHERE ts.reviewed = true))::INT AS reviewed_count
+		FROM tasks t
+		LEFT JOIN task_submissions ts ON ts.task_id = t.id
+		GROUP BY t.id
+		ORDER BY
+			CASE WHEN t.status = 'active' THEN 0 ELSE 1 END,
+			t.deadline ASC NULLS LAST,
+			t.created_at DESC
 	`
 
 	rows, err := r.db.Pool.Query(ctx, query)
@@ -32,23 +48,125 @@ func (r *TaskRepository) GetAll(ctx context.Context) ([]*model.Task, error) {
 
 	var tasks []*model.Task
 	for rows.Next() {
-		var t model.Task
+		var task model.Task
 		if err := rows.Scan(
-			&t.ID,
-			&t.Title,
-			&t.Description,
-			&t.Type,
-			&t.Reward,
-			&t.Deadline,
-			&t.Status,
-			&t.CreatedBy,
-			&t.CreatedAt,
-			&t.ClosedAt,
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Type,
+			&task.Reward,
+			&task.Deadline,
+			&task.Status,
+			&task.CreatedBy,
+			&task.CreatedAt,
+			&task.ClosedAt,
+			&task.SubmissionCount,
+			&task.ReviewedCount,
 		); err != nil {
 			return nil, fmt.Errorf("scan task: %w", err)
 		}
+		tasks = append(tasks, &task)
+	}
 
-		tasks = append(tasks, &t)
+	return tasks, nil
+}
+
+func (r *TaskRepository) GetForUser(ctx context.Context, userID string) ([]*model.Task, error) {
+	query := `
+		SELECT
+			t.id,
+			t.title,
+			t.description,
+			t.type,
+			t.reward,
+			t.deadline,
+			t.status,
+			t.created_by,
+			t.created_at,
+			t.closed_at,
+			ts.id,
+			ts.task_id,
+			ts.user_id,
+			ts.response_text,
+			ts.response_url,
+			ts.submitted_at,
+			ts.reviewed,
+			ts.reward_given,
+			ts.reviewed_at,
+			ts.reviewed_by
+		FROM tasks t
+		LEFT JOIN task_submissions ts
+			ON ts.task_id = t.id
+			AND ts.user_id = $1
+		ORDER BY
+			CASE WHEN t.status = 'active' THEN 0 ELSE 1 END,
+			t.deadline ASC NULLS LAST,
+			t.created_at DESC
+	`
+
+	rows, err := r.db.Pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get tasks for user: %w", err)
+	}
+	defer rows.Close()
+
+	var tasks []*model.Task
+	for rows.Next() {
+		var (
+			task             model.Task
+			submissionID     *string
+			submissionTaskID *string
+			submissionUserID *string
+			responseText     *string
+			responseURL      *string
+			submittedAt      *time.Time
+			reviewed         *bool
+			rewardGiven      *int
+			reviewedAt       *time.Time
+			reviewedBy       *string
+		)
+
+		if err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Type,
+			&task.Reward,
+			&task.Deadline,
+			&task.Status,
+			&task.CreatedBy,
+			&task.CreatedAt,
+			&task.ClosedAt,
+			&submissionID,
+			&submissionTaskID,
+			&submissionUserID,
+			&responseText,
+			&responseURL,
+			&submittedAt,
+			&reviewed,
+			&rewardGiven,
+			&reviewedAt,
+			&reviewedBy,
+		); err != nil {
+			return nil, fmt.Errorf("scan user task: %w", err)
+		}
+
+		if submissionID != nil && submissionTaskID != nil && submissionUserID != nil && submittedAt != nil && reviewed != nil {
+			task.MySubmission = &model.TaskSubmission{
+				ID:           *submissionID,
+				TaskID:       *submissionTaskID,
+				UserID:       *submissionUserID,
+				ResponseText: responseText,
+				ResponseURL:  responseURL,
+				SubmittedAt:  *submittedAt,
+				Reviewed:     *reviewed,
+				RewardGiven:  rewardGiven,
+				ReviewedAt:   reviewedAt,
+				ReviewedBy:   reviewedBy,
+			}
+		}
+
+		tasks = append(tasks, &task)
 	}
 
 	return tasks, nil
@@ -61,23 +179,23 @@ func (r *TaskRepository) GetByID(ctx context.Context, id string) (*model.Task, e
 		WHERE id = $1
 	`
 
-	var t model.Task
+	var task model.Task
 	if err := r.db.Pool.QueryRow(ctx, query, id).Scan(
-		&t.ID,
-		&t.Title,
-		&t.Description,
-		&t.Type,
-		&t.Reward,
-		&t.Deadline,
-		&t.Status,
-		&t.CreatedBy,
-		&t.CreatedAt,
-		&t.ClosedAt,
+		&task.ID,
+		&task.Title,
+		&task.Description,
+		&task.Type,
+		&task.Reward,
+		&task.Deadline,
+		&task.Status,
+		&task.CreatedBy,
+		&task.CreatedAt,
+		&task.ClosedAt,
 	); err != nil {
 		return nil, fmt.Errorf("get task by id: %w", err)
 	}
 
-	return &t, nil
+	return &task, nil
 }
 
 func (r *TaskRepository) Create(ctx context.Context, task *model.Task) error {
@@ -115,7 +233,9 @@ func (r *TaskRepository) Update(ctx context.Context, task *model.Task) error {
 		WHERE id = $1
 	`
 
-	result, err := r.db.Pool.Exec(ctx, query,
+	result, err := r.db.Pool.Exec(
+		ctx,
+		query,
 		task.ID,
 		task.Title,
 		task.Description,
@@ -152,25 +272,4 @@ func (r *TaskRepository) Close(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
-
-func (r *TaskRepository) GetWinnerID(ctx context.Context, taskID string) (*string, error) {
-	query := `
-		SELECT nominee_id
-		FROM votes
-		WHERE task_id = $1
-		GROUP BY nominee_id
-		ORDER BY COUNT(*) DESC, MIN(created_at) ASC
-		LIMIT 1
-	`
-
-	var winnerID string
-	if err := r.db.Pool.QueryRow(ctx, query, taskID).Scan(&winnerID); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("get task winner: %w", err)
-	}
-
-	return &winnerID, nil
 }

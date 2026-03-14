@@ -1,10 +1,12 @@
-﻿"use client"
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { Eye, EyeOff, KeyRound, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { api } from '@/lib/api'
+import { studentLoginToEmail } from '@/lib/student-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,8 +14,9 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,6 +24,11 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      const email = studentLoginToEmail(login)
+      if (!email) {
+        throw new Error('Введите логин или email')
+      }
+
       const supabase = createClient()
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
@@ -37,12 +45,8 @@ export default function LoginPage() {
         group_name: groupName,
       })
 
-      toast.success('Добро пожаловать! 🍪')
-      if (role === 'admin') {
-        router.push('/admin/stats')
-      } else {
-        router.push('/dashboard')
-      }
+      toast.success('Добро пожаловать!')
+      router.push(role === 'admin' ? '/admin/stats' : '/dashboard')
     } catch (error: any) {
       toast.error(error.message || 'Ошибка входа')
     } finally {
@@ -51,96 +55,83 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center page-theme-gradient p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden page-theme-gradient p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.34),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.22),transparent_30%)]" />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.45 }}
+        className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-2xl border border-blue-100 bg-white p-8 shadow-xl">
+        <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card/95 p-8 shadow-[0_40px_120px_-55px_rgba(15,23,42,0.55)] backdrop-blur-xl">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
             className="mb-8 text-center"
           >
-            <div className="mb-4 text-6xl">🍪</div>
-            <h1 className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-3xl font-bold text-transparent">CookieLearn</h1>
-            <p className="mt-2 text-blue-600/70">Вход в систему</p>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/12 text-3xl shadow-inner">🍪</div>
+            <h1 className="text-3xl font-bold text-card-foreground">CookieLearn</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Войдите по логину и паролю, которые выдал преподаватель, чтобы продолжить работу</p>
           </motion.div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="student@example.com"
-              />
+              <Label htmlFor="login">Логин</Label>
+              <div className="relative">
+                <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="login"
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  required
+                  placeholder="Введите логин"
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Пароль</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Введите пароль"
+                  className="pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
               Войти
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-blue-600/60">
-            <p>Тестовый аккаунт:</p>
-            <p className="mt-1 font-mono">student@test.com / password123</p>
-          </div>
         </div>
 
-        <motion.div
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6 text-center text-sm text-blue-600/50"
+          transition={{ delay: 0.35 }}
+          className="mt-5 text-center text-sm text-muted-foreground"
         >
           CookieLearn © 2026
-        </motion.div>
+        </motion.p>
       </motion.div>
-
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, 10, 0],
-            }}
-            transition={{
-              duration: 3 + i,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: i * 0.5,
-            }}
-            className="absolute text-4xl opacity-10"
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${10 + i * 15}%`,
-            }}
-          >
-            🍪
-          </motion.div>
-        ))}
-      </div>
     </div>
   )
 }
-

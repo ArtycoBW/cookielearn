@@ -98,3 +98,34 @@ func (c *SupabaseAuthAdmin) CreateUser(
 
 	return parsed.ID, nil
 }
+
+func (c *SupabaseAuthAdmin) DeleteUser(ctx context.Context, userID string) error {
+	if c == nil {
+		return fmt.Errorf("клиент Supabase Admin не настроен")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return fmt.Errorf("user id is required")
+	}
+
+	url := c.baseURL + "/auth/v1/admin/users/" + strings.TrimSpace(userID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("apikey", c.serviceKey)
+	req.Header.Set("Authorization", "Bearer "+c.serviceKey)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("ошибка Supabase Auth (%d): %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+
+	return nil
+}

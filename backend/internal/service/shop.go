@@ -31,7 +31,15 @@ func NewShopService(
 }
 
 func (s *ShopService) GetCertificates(ctx context.Context) ([]*model.Certificate, error) {
-	return s.certRepo.GetAll(ctx, true)
+	return s.certRepo.GetCatalog(ctx, true)
+}
+
+func (s *ShopService) GetCertificateBackground(ctx context.Context, certID string) (*string, error) {
+	if certID == "" {
+		return nil, fmt.Errorf("certificate id is required")
+	}
+
+	return s.certRepo.GetBackground(ctx, certID)
 }
 
 func (s *ShopService) BuyCertificate(ctx context.Context, userID, certID string) (*model.Purchase, error) {

@@ -28,6 +28,24 @@ func (h *ShopHandler) GetCertificates(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, certificates)
 }
 
+func (h *ShopHandler) GetCertificateBackground(w http.ResponseWriter, r *http.Request) {
+	certID := chi.URLParam(r, "id")
+	if certID == "" {
+		respondError(w, http.StatusBadRequest, "отсутствует ID сертификата")
+		return
+	}
+
+	background, err := h.service.GetCertificateBackground(r.Context(), certID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения фона сертификата")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"background_image": background,
+	})
+}
+
 func (h *ShopHandler) BuyCertificate(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -64,7 +82,6 @@ func (h *ShopHandler) BuyRandomBonus(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Cost int `json:"cost"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "неверный формат запроса")
 		return

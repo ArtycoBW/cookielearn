@@ -5,79 +5,79 @@
 @layer base {
   :root,
   html[data-theme='ocean'] {
-    --background: 220 35% 98%;
-    --foreground: 223 47% 17%;
+    --background: 210 45% 98%;
+    --foreground: 210 47% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 223 47% 17%;
+    --card-foreground: 210 47% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 223 47% 17%;
-    --primary: 218 72% 48%;
+    --popover-foreground: 210 47% 17%;
+    --primary: 205 78% 52%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 217 36% 92%;
-    --secondary-foreground: 223 47% 17%;
-    --muted: 215 34% 95%;
-    --muted-foreground: 219 28% 43%;
-    --accent: 215 34% 95%;
-    --accent-foreground: 223 47% 17%;
+    --secondary: 205 38% 93%;
+    --secondary-foreground: 210 47% 17%;
+    --muted: 205 34% 95%;
+    --muted-foreground: 210 28% 43%;
+    --accent: 205 34% 95%;
+    --accent-foreground: 210 47% 17%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 34% 88%;
-    --input: 217 34% 88%;
-    --ring: 218 72% 48%;
+    --border: 205 34% 89%;
+    --input: 205 34% 89%;
+    --ring: 205 78% 52%;
     --radius: 0.75rem;
 
     --surface-0-rgb: 255 255 255;
-    --surface-1-rgb: 244 248 255;
-    --surface-2-rgb: 235 242 255;
-    --surface-3-rgb: 221 232 251;
+    --surface-1-rgb: 240 248 255;
+    --surface-2-rgb: 228 242 255;
+    --surface-3-rgb: 214 234 252;
 
-    --brand-50-rgb: 237 244 255;
-    --brand-100-rgb: 219 233 255;
-    --brand-200-rgb: 189 214 255;
-    --brand-300-rgb: 146 186 255;
-    --brand-400-rgb: 101 154 247;
-    --brand-500-rgb: 68 126 230;
-    --brand-600-rgb: 47 100 212;
-    --brand-700-rgb: 37 78 168;
-    --brand-800-rgb: 31 63 136;
-    --brand-900-rgb: 28 48 103;
-    --brand-950-rgb: 15 29 64;
+    --brand-50-rgb: 235 246 255;
+    --brand-100-rgb: 214 238 255;
+    --brand-200-rgb: 180 222 255;
+    --brand-300-rgb: 140 204 255;
+    --brand-400-rgb: 96 182 250;
+    --brand-500-rgb: 56 162 238;
+    --brand-600-rgb: 38 138 218;
+    --brand-700-rgb: 30 112 180;
+    --brand-800-rgb: 26 90 148;
+    --brand-900-rgb: 22 68 115;
+    --brand-950-rgb: 12 38 70;
 
-    --text-strong: #1a2b55;
-    --text-base: #243d70;
-    --text-muted: #4c6696;
-    --text-subtle: #647faa;
+    --text-strong: #163e6e;
+    --text-base: #1e5a94;
+    --text-muted: #4882b4;
+    --text-subtle: #6ba0cc;
 
-    --border-soft: rgba(170, 193, 231, 0.46);
-    --border-base: rgba(116, 147, 204, 0.45);
-    --border-strong: rgba(62, 106, 181, 0.62);
+    --border-soft: rgba(150, 200, 240, 0.4);
+    --border-base: rgba(100, 170, 230, 0.4);
+    --border-strong: rgba(50, 130, 210, 0.5);
 
-    --page-base: #eef3fb;
-    --page-grad-from: #f4f8ff;
+    --page-base: #edf5fc;
+    --page-grad-from: #f0f8ff;
     --page-grad-via: #ffffff;
-    --page-grad-to: #e7eefb;
+    --page-grad-to: #e4f0fb;
 
-    --theme-nav-from: #172f66;
-    --theme-nav-via: #21458e;
-    --theme-nav-to: #1b3774;
-    --theme-nav-border: rgba(148, 180, 232, 0.35);
+    --theme-nav-from: #14416e;
+    --theme-nav-via: #1c5a96;
+    --theme-nav-to: #164a7e;
+    --theme-nav-border: rgba(130, 190, 240, 0.3);
 
-    --ambient-color-a: rgba(75, 123, 220, 0.16);
-    --ambient-color-b: rgba(74, 144, 226, 0.14);
-    --ambient-color-c: rgba(134, 169, 227, 0.1);
-    --ambient-vignette: rgba(241, 246, 255, 0.72);
+    --ambient-color-a: rgba(60, 160, 230, 0.14);
+    --ambient-color-b: rgba(80, 180, 240, 0.12);
+    --ambient-color-c: rgba(120, 195, 245, 0.08);
+    --ambient-vignette: rgba(240, 248, 255, 0.72);
     --ambient-overlay: rgba(255, 255, 255, 0.1);
-    --bubble-color: rgba(122, 162, 228, 0.18);
-    --bubble-color-strong: rgba(64, 121, 224, 0.24);
+    --bubble-color: rgba(100, 185, 240, 0.16);
+    --bubble-color-strong: rgba(50, 150, 230, 0.2);
 
     --nav-chip-bg: rgba(255, 255, 255, 0.12);
     --nav-chip-border: rgba(255, 255, 255, 0.24);
-    --nav-chip-text: rgba(243, 248, 255, 0.92);
-    --nav-item-idle-text: rgba(230, 240, 255, 0.9);
+    --nav-chip-text: rgba(240, 248, 255, 0.92);
+    --nav-item-idle-text: rgba(225, 242, 255, 0.9);
     --nav-item-idle-bg: rgba(255, 255, 255, 0.08);
-    --nav-item-active-bg: rgba(250, 253, 255, 0.97);
-    --nav-item-active-text: #1f4aa7;
-    --nav-mobile-bg: rgba(16, 33, 69, 0.98);
+    --nav-item-active-bg: rgba(248, 252, 255, 0.97);
+    --nav-item-active-text: #1a5a9e;
+    --nav-mobile-bg: rgba(12, 40, 72, 0.98);
   }
 
   html[data-theme='mint'] {

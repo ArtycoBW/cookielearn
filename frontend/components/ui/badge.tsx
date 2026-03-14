@@ -1,4 +1,4 @@
-import { HTMLAttributes, forwardRef } from 'react'
+﻿import { HTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -8,24 +8,20 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = 'default', ...props }, ref) => {
     const variants = {
-      default: 'bg-blue-100 text-blue-700',
-      success: 'bg-green-100 text-green-700',
-      warning: 'bg-yellow-100 text-yellow-700',
-      danger: 'bg-red-100 text-red-700',
+      default: 'border border-border/70 bg-secondary text-secondary-foreground',
+      success: 'border border-emerald-500/25 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300',
+      warning: 'border border-amber-500/25 bg-amber-500/12 text-amber-700 dark:text-amber-300',
+      danger: 'border border-rose-500/25 bg-rose-500/12 text-rose-700 dark:text-rose-300',
     }
 
     return (
       <span
         ref={ref}
-        className={cn(
-          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-          variants[variant],
-          className
-        )}
+        className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold', variants[variant], className)}
         {...props}
       />
     )
-  }
+  },
 )
 
 Badge.displayName = 'Badge'

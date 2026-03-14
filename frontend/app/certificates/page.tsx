@@ -99,56 +99,73 @@ export default function CertificatesPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {certificates.map((cert, index) => (
-                <motion.div
-                  key={cert.id}
-                  initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: index * 0.06 }}
-                >
-                  <Card className="h-full bg-white p-6">
-                    <div className="mb-4 flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(cert.status)}
-                        <h3 className="text-xl font-bold text-blue-900">{cert.certificate?.title}</h3>
-                      </div>
-                      {getStatusBadge(cert.status)}
-                    </div>
+              {certificates.map((cert, index) => {
+                const hasBg = !!cert.certificate?.background_image
 
-                    <p className="mb-4 line-clamp-2 text-blue-600/70">{cert.certificate?.description}</p>
-
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                        <Calendar className="h-4 w-4" />
-                        <span>Куплен: {formatDate(cert.purchased_at)}</span>
-                      </div>
-                      {cert.expires_at && (
-                        <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                          <Clock className="h-4 w-4" />
-                          <span>Действителен до: {formatDate(cert.expires_at)}</span>
+                return (
+                  <motion.div
+                    key={cert.id}
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: index * 0.06 }}
+                  >
+                    <Card className="relative h-full overflow-hidden">
+                      {hasBg && (
+                        <div className="absolute inset-0 z-0">
+                          <img
+                            src={cert.certificate?.background_image ?? undefined}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-card/70 backdrop-blur-[1.5px]" />
                         </div>
                       )}
-                      {cert.used_at && (
-                        <div className="flex items-center gap-2 text-sm text-blue-600/70">
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>Использован: {formatDate(cert.used_at)}</span>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="border-t border-blue-100 pt-4">
-                      <div className="mb-3 text-sm text-blue-600/70">
-                        Стоимость: <span className="font-semibold text-blue-600">{cert.price_paid} 🍪</span>
+                      <div className="relative z-10 p-6">
+                        <div className="mb-4 flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(cert.status)}
+                            <h3 className="text-xl font-bold text-blue-900">{cert.certificate?.title}</h3>
+                          </div>
+                          {getStatusBadge(cert.status)}
+                        </div>
+
+                        <p className="mb-4 line-clamp-2 text-blue-600/70">{cert.certificate?.description}</p>
+
+                        <div className="mb-4 space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-blue-600/70">
+                            <Calendar className="h-4 w-4" />
+                            <span>Куплен: {formatDate(cert.purchased_at)}</span>
+                          </div>
+                          {cert.expires_at && (
+                            <div className="flex items-center gap-2 text-sm text-blue-600/70">
+                              <Clock className="h-4 w-4" />
+                              <span>Действителен до: {formatDate(cert.expires_at)}</span>
+                            </div>
+                          )}
+                          {cert.used_at && (
+                            <div className="flex items-center gap-2 text-sm text-blue-600/70">
+                              <CheckCircle2 className="h-4 w-4" />
+                              <span>Использован: {formatDate(cert.used_at)}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="border-t border-blue-100 pt-4">
+                          <div className="mb-3 text-sm text-blue-600/70">
+                            Стоимость: <span className="font-semibold text-blue-600">{cert.price_paid} 🍪</span>
+                          </div>
+                          {cert.status === 'active' && (
+                            <Button onClick={() => handleUse(cert.id)} disabled={usingId === cert.id} className="w-full">
+                              {usingId === cert.id ? 'Использование...' : 'Использовать'}
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      {cert.status === 'active' && (
-                        <Button onClick={() => handleUse(cert.id)} disabled={usingId === cert.id} className="w-full">
-                          {usingId === cert.id ? 'Использование...' : 'Использовать'}
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+                    </Card>
+                  </motion.div>
+                )
+              })}
             </div>
           )}
 
@@ -171,4 +188,3 @@ export default function CertificatesPage() {
     </>
   )
 }
-

@@ -42,16 +42,31 @@ func main() {
 	purchRepo := repository.NewPurchaseRepository(db)
 	bonusRepo := repository.NewDailyBonusRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
+	taskSubmissionRepo := repository.NewTaskSubmissionRepository(db)
 	statsRepo := repository.NewStatsRepository(db)
+	surveyRepo := repository.NewSurveyRepository(db)
+	credRepo := repository.NewAccountCredentialRepository(db)
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	supabaseServiceRole := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	studentEmailDomain := os.Getenv("SUPABASE_STUDENT_EMAIL_DOMAIN")
 	authAdmin := service.NewSupabaseAuthAdmin(supabaseURL, supabaseServiceRole)
 
-	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo)
+	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo, surveyRepo, taskRepo, taskSubmissionRepo)
 	shopService := service.NewShopService(certRepo, purchRepo, txRepo, db)
-	adminService := service.NewAdminService(profileRepo, txRepo, certRepo, taskRepo, statsRepo, authAdmin, studentEmailDomain)
+	adminService := service.NewAdminService(
+		profileRepo,
+		txRepo,
+		certRepo,
+		taskRepo,
+		taskSubmissionRepo,
+		purchRepo,
+		statsRepo,
+		surveyRepo,
+		credRepo,
+		authAdmin,
+		studentEmailDomain,
+	)
 
 	studentHandler := handler.NewStudentHandler(studentService)
 	shopHandler := handler.NewShopHandler(shopService)
@@ -92,11 +107,16 @@ func main() {
 		r.Get("/me/certificates", studentHandler.GetMyCertificates)
 		r.Post("/me/certificates/{id}/use", studentHandler.UseCertificate)
 		r.Post("/me/daily-bonus", studentHandler.ClaimDailyBonus)
+		r.Get("/me/survey", studentHandler.GetMySurvey)
+		r.Post("/me/survey", studentHandler.SubmitSurvey)
+		r.Get("/me/tasks", studentHandler.GetMyTasks)
+		r.Post("/me/tasks/{id}/submit", studentHandler.SubmitTask)
 
 		r.Get("/leaderboard", studentHandler.GetLeaderboard)
 
 		r.Route("/shop", func(r chi.Router) {
 			r.Get("/certificates", shopHandler.GetCertificates)
+			r.Get("/certificates/{id}/background", shopHandler.GetCertificateBackground)
 			r.Post("/certificates/{id}/buy", shopHandler.BuyCertificate)
 			r.Post("/random-bonus/buy", shopHandler.BuyRandomBonus)
 		})
@@ -105,12 +125,15 @@ func main() {
 			r.Use(middleware.AdminOnly)
 
 			r.Get("/students", adminHandler.GetStudents)
+			r.Get("/accounts", adminHandler.GetAccountCredentials)
 			r.Post("/students", adminHandler.CreateStudent)
 			r.Post("/students/register", adminHandler.RegisterStudent)
 			r.Post("/students/bulk-import", adminHandler.BulkImportStudents)
 			r.Put("/students/{id}", adminHandler.UpdateStudent)
 			r.Delete("/students/{id}", adminHandler.DeleteStudent)
 			r.Post("/cookies/award", adminHandler.AwardCookies)
+			r.Get("/cookies/history", adminHandler.GetTransactionHistory)
+			r.Get("/purchases", adminHandler.GetPurchaseHistory)
 
 			r.Get("/certificates", adminHandler.GetCertificates)
 			r.Post("/certificates", adminHandler.CreateCertificate)
@@ -121,6 +144,11 @@ func main() {
 			r.Post("/tasks", adminHandler.CreateTask)
 			r.Put("/tasks/{id}", adminHandler.UpdateTask)
 			r.Post("/tasks/{id}/close", adminHandler.CloseTask)
+			r.Get("/task-submissions", adminHandler.GetTaskSubmissions)
+			r.Post("/task-submissions/reward", adminHandler.RewardTaskSubmission)
+
+			r.Get("/surveys", adminHandler.GetSurveys)
+			r.Post("/surveys/reward", adminHandler.RewardSurvey)
 
 			r.Get("/stats", adminHandler.GetStats)
 		})

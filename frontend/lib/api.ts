@@ -2,6 +2,17 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
+async function throwApiError(res: Response): Promise<never> {
+  let message = `Ошибка ${res.status}`
+  try {
+    const body = await res.json()
+    if (body.error) message = body.error
+  } catch {
+    // response is not JSON (e.g. plain-text 404 from router)
+  }
+  throw new Error(message)
+}
+
 async function getAuthToken() {
   const supabase = createClient()
   const {
@@ -21,8 +32,7 @@ export const api = {
     })
 
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Ошибка запроса')
+      await throwApiError(res)
     }
 
     return res.json()
@@ -40,8 +50,7 @@ export const api = {
     })
 
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Ошибка запроса')
+      await throwApiError(res)
     }
 
     return res.json()
@@ -59,8 +68,7 @@ export const api = {
     })
 
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Ошибка запроса')
+      await throwApiError(res)
     }
 
     return res.json()
@@ -77,8 +85,7 @@ export const api = {
     })
 
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Ошибка запроса')
+      await throwApiError(res)
     }
 
     return res.json()

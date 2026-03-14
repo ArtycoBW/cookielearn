@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cookielearn/backend/internal/model"
+	"github.com/jackc/pgx/v5"
 )
 
 type TransactionRepository struct {
@@ -39,10 +40,17 @@ func (r *TransactionRepository) GetByUserID(ctx context.Context, userID string, 
 		FROM cookie_transactions
 		WHERE user_id = $1
 		ORDER BY created_at DESC
-		LIMIT $2
 	`
 
-	rows, err := r.db.Pool.Query(ctx, query, userID, limit)
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if limit > 0 {
+		rows, err = r.db.Pool.Query(ctx, query+"\nLIMIT $2", userID, limit)
+	} else {
+		rows, err = r.db.Pool.Query(ctx, query, userID)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("get transactions by user: %w", err)
 	}
@@ -66,10 +74,17 @@ func (r *TransactionRepository) GetAll(ctx context.Context, limit int) ([]*model
 		SELECT id, user_id, amount, reason, category, created_by, created_at
 		FROM cookie_transactions
 		ORDER BY created_at DESC
-		LIMIT $1
 	`
 
-	rows, err := r.db.Pool.Query(ctx, query, limit)
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if limit > 0 {
+		rows, err = r.db.Pool.Query(ctx, query+"\nLIMIT $1", limit)
+	} else {
+		rows, err = r.db.Pool.Query(ctx, query)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("get all transactions: %w", err)
 	}
@@ -86,4 +101,63 @@ func (r *TransactionRepository) GetAll(ctx context.Context, limit int) ([]*model
 	}
 
 	return transactions, nil
+}
+
+func (r *TransactionRepository) GetHistory(ctx context.Context, limit int) ([]*model.TransactionHistoryEntry, error) {
+	query := `
+		SELECT
+			t.id,
+			t.user_id,
+			p.full_name,
+			p.group_name,
+			ac.login,
+			t.amount,
+			t.reason,
+			t.category,
+			t.created_by,
+			admin.full_name,
+			t.created_at
+		FROM cookie_transactions t
+		JOIN profiles p ON p.id = t.user_id
+		LEFT JOIN account_credentials ac ON ac.user_id = p.id
+		LEFT JOIN profiles admin ON admin.id = t.created_by
+		ORDER BY t.created_at DESC
+	`
+
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if limit > 0 {
+		rows, err = r.db.Pool.Query(ctx, query+"\nLIMIT $1", limit)
+	} else {
+		rows, err = r.db.Pool.Query(ctx, query)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get transaction history: %w", err)
+	}
+	defer rows.Close()
+
+	var items []*model.TransactionHistoryEntry
+	for rows.Next() {
+		var item model.TransactionHistoryEntry
+		if err := rows.Scan(
+			&item.ID,
+			&item.UserID,
+			&item.UserFullName,
+			&item.UserGroupName,
+			&item.UserLogin,
+			&item.Amount,
+			&item.Reason,
+			&item.Category,
+			&item.CreatedBy,
+			&item.CreatedByName,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan transaction history: %w", err)
+		}
+		items = append(items, &item)
+	}
+
+	return items, nil
 }

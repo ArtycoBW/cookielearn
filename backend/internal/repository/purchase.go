@@ -22,11 +22,8 @@ func (r *PurchaseRepository) Create(ctx context.Context, p *model.Purchase) erro
 		RETURNING id, purchased_at, expires_at, status
 	`
 
-	err := r.db.Pool.QueryRow(ctx, query,
-		p.UserID, p.CertificateID, p.PricePaid,
-	).Scan(&p.ID, &p.PurchasedAt, &p.ExpiresAt, &p.Status)
-
-	if err != nil {
+	if err := r.db.Pool.QueryRow(ctx, query, p.UserID, p.CertificateID, p.PricePaid).
+		Scan(&p.ID, &p.PurchasedAt, &p.ExpiresAt, &p.Status); err != nil {
 		return fmt.Errorf("create purchase: %w", err)
 	}
 
@@ -36,8 +33,10 @@ func (r *PurchaseRepository) Create(ctx context.Context, p *model.Purchase) erro
 func (r *PurchaseRepository) GetByUserID(ctx context.Context, userID string) ([]*model.Purchase, error) {
 	query := `
 		SELECT p.id, p.user_id, p.certificate_id, p.price_paid, p.purchased_at,
-			   p.expires_at, p.used_at, p.status,
-			   c.id, c.title, c.description, c.validity_days
+		       p.expires_at, p.used_at, p.status,
+		       c.id, c.title, c.description, c.base_price, c.current_price,
+		       c.inflation_step, c.total_quantity, c.remaining_quantity, c.validity_days,
+		       c.expires_at, c.background_image, c.is_active, c.created_at, c.updated_at
 		FROM purchases p
 		JOIN certificates c ON p.certificate_id = c.id
 		WHERE p.user_id = $1
@@ -52,22 +51,94 @@ func (r *PurchaseRepository) GetByUserID(ctx context.Context, userID string) ([]
 
 	var purchases []*model.Purchase
 	for rows.Next() {
-		var p model.Purchase
-		var c model.Certificate
+		var purchase model.Purchase
+		var certificate model.Certificate
 
 		if err := rows.Scan(
-			&p.ID, &p.UserID, &p.CertificateID, &p.PricePaid, &p.PurchasedAt,
-			&p.ExpiresAt, &p.UsedAt, &p.Status,
-			&c.ID, &c.Title, &c.Description, &c.ValidityDays,
+			&purchase.ID,
+			&purchase.UserID,
+			&purchase.CertificateID,
+			&purchase.PricePaid,
+			&purchase.PurchasedAt,
+			&purchase.ExpiresAt,
+			&purchase.UsedAt,
+			&purchase.Status,
+			&certificate.ID,
+			&certificate.Title,
+			&certificate.Description,
+			&certificate.BasePrice,
+			&certificate.CurrentPrice,
+			&certificate.InflationStep,
+			&certificate.TotalQuantity,
+			&certificate.RemainingQuantity,
+			&certificate.ValidityDays,
+			&certificate.ExpiresAt,
+			&certificate.BackgroundImage,
+			&certificate.IsActive,
+			&certificate.CreatedAt,
+			&certificate.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan purchase: %w", err)
 		}
 
-		p.Certificate = &c
-		purchases = append(purchases, &p)
+		purchase.Certificate = &certificate
+		purchases = append(purchases, &purchase)
 	}
 
 	return purchases, nil
+}
+
+func (r *PurchaseRepository) GetAll(ctx context.Context) ([]*model.PurchaseHistoryEntry, error) {
+	query := `
+		SELECT
+			p.id,
+			p.user_id,
+			prof.full_name,
+			prof.group_name,
+			ac.login,
+			p.certificate_id,
+			c.title,
+			p.price_paid,
+			p.purchased_at,
+			p.expires_at,
+			p.used_at,
+			p.status
+		FROM purchases p
+		JOIN profiles prof ON prof.id = p.user_id
+		JOIN certificates c ON c.id = p.certificate_id
+		LEFT JOIN account_credentials ac ON ac.user_id = prof.id
+		ORDER BY p.purchased_at DESC
+	`
+
+	rows, err := r.db.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("get all purchases: %w", err)
+	}
+	defer rows.Close()
+
+	var items []*model.PurchaseHistoryEntry
+	for rows.Next() {
+		var item model.PurchaseHistoryEntry
+		if err := rows.Scan(
+			&item.ID,
+			&item.UserID,
+			&item.UserFullName,
+			&item.UserGroupName,
+			&item.UserLogin,
+			&item.CertificateID,
+			&item.CertificateTitle,
+			&item.PricePaid,
+			&item.PurchasedAt,
+			&item.ExpiresAt,
+			&item.UsedAt,
+			&item.Status,
+		); err != nil {
+			return nil, fmt.Errorf("scan purchase history: %w", err)
+		}
+		items = append(items, &item)
+	}
+
+	return items, nil
 }
 
 func (r *PurchaseRepository) UpdateStatus(ctx context.Context, id, status string) error {
@@ -77,8 +148,7 @@ func (r *PurchaseRepository) UpdateStatus(ctx context.Context, id, status string
 		WHERE id = $1
 	`
 
-	_, err := r.db.Pool.Exec(ctx, query, id, status)
-	if err != nil {
+	if _, err := r.db.Pool.Exec(ctx, query, id, status); err != nil {
 		return fmt.Errorf("update purchase status: %w", err)
 	}
 

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import {
   Award,
   BarChart3,
   ClipboardList,
+  FileText,
   Gift,
   History,
   Home,
@@ -38,16 +39,21 @@ const studentNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Дашборд', icon: Home },
   { href: '/shop', label: 'Магазин', icon: ShoppingBag },
   { href: '/my-certificates', label: 'Сертификаты', icon: Award },
+  { href: '/tasks', label: 'Задания', icon: ClipboardList },
   { href: '/history', label: 'История', icon: History },
   { href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
+  { href: '/survey', label: 'Анкета', icon: FileText },
 ]
 
 const adminNavItems: NavItem[] = [
   { href: '/admin/stats', label: 'Статистика', icon: BarChart3 },
+  { href: '/admin/leaderboard', label: 'Лидерборд', icon: Trophy },
+  { href: '/shop', label: 'Магазин', icon: ShoppingBag },
   { href: '/admin/students', label: 'Студенты', icon: Users },
   { href: '/admin/award', label: 'Начисления', icon: Gift },
   { href: '/admin/certificates', label: 'Сертификаты', icon: Shield },
   { href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
+  { href: '/admin/surveys', label: 'Анкеты', icon: FileText },
 ]
 
 const themeLabels: Record<AppTheme, string> = {
@@ -61,6 +67,7 @@ export function Navigation() {
   const router = useRouter()
   const { data: profile } = useProfile()
   const { theme, setTheme } = useTheme()
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -78,10 +85,10 @@ export function Navigation() {
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      toast.success('Вы успешно вышли из системы')
+      toast.success('Вы вышли из системы')
       router.push('/login')
     } catch {
-      toast.error('Ошибка при выходе')
+      toast.error('Не удалось выполнить выход')
       setIsLoggingOut(false)
     }
   }
@@ -91,25 +98,25 @@ export function Navigation() {
   return (
     <>
       <nav className="theme-nav sticky top-0 z-50 hidden border-b shadow-lg md:block">
-        <div className="mx-auto h-16 w-full max-w-7xl px-6">
-          <div className="flex h-full items-center justify-between gap-4">
-            <Link href={logoHref} className="group flex shrink-0 items-center gap-2">
-              <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="text-2xl">
-                🍪
-              </motion.div>
-              <span className="text-xl font-bold text-white transition-colors group-hover:text-white/90">CookieLearn</span>
-            </Link>
+        <div className="mx-auto flex h-16 w-full max-w-[1680px] items-center gap-4 px-4 xl:px-6">
+          <Link href={logoHref} className="group flex shrink-0 items-center gap-3">
+            <motion.span whileHover={{ rotate: 18, scale: 1.08 }} className="text-3xl">
+              🍪
+            </motion.span>
+            <span className="text-xl font-bold text-white transition-colors group-hover:text-white/90">CookieLearn</span>
+          </Link>
 
-            <div className="flex flex-1 items-center justify-center gap-1">
+          <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-max items-center gap-1 pr-1">
               {navItems.map((item) => {
-                const isActive = isActiveItem(item.href)
                 const Icon = item.icon
+                const isActive = isActiveItem(item.href)
 
                 return (
-                  <Link key={item.href} href={item.href}>
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
+                  <Link key={item.href} href={item.href} className="shrink-0">
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="relative">
                       <div
-                        className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all xl:px-4 ${
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all xl:px-4 ${
                           isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
                         }`}
                       >
@@ -118,9 +125,9 @@ export function Navigation() {
                       </div>
                       {isActive && (
                         <motion.div
-                          layoutId="activeTab"
-                          className="absolute -bottom-3 left-0 right-0 h-1 rounded-t-full bg-white"
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          layoutId="activeNavItem"
+                          className="absolute -bottom-[11px] left-3 right-3 h-1 rounded-t-full bg-white"
+                          transition={{ type: 'spring', stiffness: 500, damping: 34 }}
                         />
                       )}
                     </motion.div>
@@ -128,44 +135,35 @@ export function Navigation() {
                 )
               })}
             </div>
+          </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <div className="w-[160px]">
-                <Select value={theme} onValueChange={(value: AppTheme) => setTheme(value)}>
-                  <SelectTrigger className="nav-theme-trigger h-10">
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-4 w-4" />
-                      <SelectValue>{themeLabels[theme]}</SelectValue>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ocean">Океан</SelectItem>
-                    <SelectItem value="mint">Мята</SelectItem>
-                    <SelectItem value="midnight">Ночь</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="nav-balance-chip flex items-center gap-2 rounded-lg px-4 py-2 backdrop-blur-sm"
-              >
-                <span className="text-sm font-medium text-white/80">Баланс:</span>
-                <span className="text-2xl font-bold text-white">{profile?.balance ?? 0}</span>
-                <span className="text-2xl">🍪</span>
-              </motion.div>
-
-              <Button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                variant="outline"
-                className="nav-logout-btn gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                {isLoggingOut ? 'Выход...' : 'Выйти'}
-              </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="w-[148px]">
+              <Select value={theme} onValueChange={(value: AppTheme) => setTheme(value)}>
+                <SelectTrigger className="nav-theme-trigger h-10">
+                  <div className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    <SelectValue>{themeLabels[theme]}</SelectValue>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ocean">Океан</SelectItem>
+                  <SelectItem value="mint">Мята</SelectItem>
+                  <SelectItem value="midnight">Ночь</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            <div className="nav-balance-chip flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 backdrop-blur-sm">
+              <span className="text-sm font-medium text-white/80">Баланс:</span>
+              <span className="text-2xl font-bold text-white">{profile?.balance ?? 0}</span>
+              <span className="text-2xl">🍪</span>
+            </div>
+
+            <Button onClick={handleLogout} disabled={isLoggingOut} variant="outline" className="nav-logout-btn shrink-0 gap-2 px-4">
+              <LogOut className="h-4 w-4" />
+              {isLoggingOut ? 'Выход...' : 'Выйти'}
+            </Button>
           </div>
         </div>
       </nav>
@@ -184,9 +182,9 @@ export function Navigation() {
             </div>
 
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen((current) => !current)}
               className="shrink-0 rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-              aria-label="Toggle menu"
+              aria-label="Открыть меню"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -203,7 +201,7 @@ export function Navigation() {
               className="nav-mobile-panel"
             >
               <div className="space-y-2 px-4 py-4">
-                <div className="rounded-lg bg-white/10 p-2">
+                <div className="rounded-xl bg-white/10 p-3">
                   <div className="mb-2 flex items-center gap-2 text-sm text-white/90">
                     <Palette className="h-4 w-4" />
                     Тема: {themeLabels[theme]}
@@ -221,14 +219,14 @@ export function Navigation() {
                 </div>
 
                 {navItems.map((item) => {
-                  const isActive = isActiveItem(item.href)
                   const Icon = item.icon
+                  const isActive = isActiveItem(item.href)
 
                   return (
                     <Link key={item.href} href={item.href}>
                       <motion.div
                         whileTap={{ scale: 0.98 }}
-                        className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
+                        className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
                           isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
                         }`}
                       >
@@ -242,7 +240,7 @@ export function Navigation() {
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="nav-mobile-logout flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all"
+                  className="nav-mobile-logout flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-all"
                 >
                   <LogOut className="h-5 w-5" />
                   <span className="font-medium">{isLoggingOut ? 'Выход...' : 'Выйти'}</span>

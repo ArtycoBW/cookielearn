@@ -3,16 +3,20 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/cookielearn/backend/internal/model"
 	"github.com/cookielearn/backend/internal/repository"
 )
 
 type StudentService struct {
-	profileRepo *repository.ProfileRepository
-	txRepo      *repository.TransactionRepository
-	purchRepo   *repository.PurchaseRepository
-	bonusRepo   *repository.DailyBonusRepository
+	profileRepo        *repository.ProfileRepository
+	txRepo             *repository.TransactionRepository
+	purchRepo          *repository.PurchaseRepository
+	bonusRepo          *repository.DailyBonusRepository
+	surveyRepo         *repository.SurveyRepository
+	taskRepo           *repository.TaskRepository
+	taskSubmissionRepo *repository.TaskSubmissionRepository
 }
 
 func NewStudentService(
@@ -20,12 +24,18 @@ func NewStudentService(
 	txRepo *repository.TransactionRepository,
 	purchRepo *repository.PurchaseRepository,
 	bonusRepo *repository.DailyBonusRepository,
+	surveyRepo *repository.SurveyRepository,
+	taskRepo *repository.TaskRepository,
+	taskSubmissionRepo *repository.TaskSubmissionRepository,
 ) *StudentService {
 	return &StudentService{
-		profileRepo: profileRepo,
-		txRepo:      txRepo,
-		purchRepo:   purchRepo,
-		bonusRepo:   bonusRepo,
+		profileRepo:        profileRepo,
+		txRepo:             txRepo,
+		purchRepo:          purchRepo,
+		bonusRepo:          bonusRepo,
+		surveyRepo:         surveyRepo,
+		taskRepo:           taskRepo,
+		taskSubmissionRepo: taskSubmissionRepo,
 	}
 }
 
@@ -34,9 +44,10 @@ func (s *StudentService) GetProfile(ctx context.Context, userID string) (*model.
 }
 
 func (s *StudentService) GetTransactions(ctx context.Context, userID string, limit int) ([]*model.Transaction, error) {
-	if limit <= 0 || limit > 100 {
-		limit = 50
+	if limit > 100 {
+		limit = 100
 	}
+
 	return s.txRepo.GetByUserID(ctx, userID, limit)
 }
 
@@ -74,9 +85,6 @@ func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*m
 }
 
 func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*model.LeaderboardEntry, error) {
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
 	return s.profileRepo.GetLeaderboard(ctx, limit)
 }
 
@@ -91,25 +99,113 @@ func (s *StudentService) SyncProfile(
 		return nil, fmt.Errorf("user id обязателен")
 	}
 
-	if fullName == "" {
+	if strings.TrimSpace(fullName) == "" {
 		fullName = "Пользователь"
 	}
-
-	if role == "" {
+	if strings.TrimSpace(role) == "" {
 		role = "student"
 	}
 
-	return s.profileRepo.UpsertFromAuth(ctx, userID, fullName, groupName, role)
+	return s.profileRepo.UpsertFromAuth(ctx, userID, strings.TrimSpace(fullName), groupName, role)
 }
 
 func (s *StudentService) UseCertificate(ctx context.Context, userID, purchaseID string) error {
-	if purchaseID == "" {
+	if strings.TrimSpace(purchaseID) == "" {
 		return fmt.Errorf("отсутствует ID сертификата")
 	}
 
-	if err := s.purchRepo.MarkAsUsed(ctx, purchaseID, userID); err != nil {
-		return err
+	return s.purchRepo.MarkAsUsed(ctx, purchaseID, userID)
+}
+
+func (s *StudentService) GetSurvey(ctx context.Context, userID string) (*model.SurveySubmission, error) {
+	return s.surveyRepo.GetByUserID(ctx, userID)
+}
+
+func (s *StudentService) SubmitSurvey(ctx context.Context, userID string, answers []model.SurveyAnswer) (*model.SurveySubmission, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("user id обязателен")
+	}
+	if len(answers) == 0 {
+		return nil, fmt.Errorf("ответы анкеты обязательны")
 	}
 
-	return nil
+	existing, err := s.surveyRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, fmt.Errorf("анкета уже заполнена")
+	}
+
+	cleanAnswers := make([]model.SurveyAnswer, 0, len(answers))
+	for _, answer := range answers {
+		text := strings.TrimSpace(answer.Answer)
+		if answer.QuestionID <= 0 || text == "" {
+			return nil, fmt.Errorf("в анкете есть пустые ответы")
+		}
+		cleanAnswers = append(cleanAnswers, model.SurveyAnswer{
+			QuestionID: answer.QuestionID,
+			Answer:     text,
+		})
+	}
+
+	submission := &model.SurveySubmission{
+		UserID:  userID,
+		Answers: cleanAnswers,
+	}
+	if err := s.surveyRepo.Create(ctx, submission); err != nil {
+		return nil, err
+	}
+
+	return s.surveyRepo.GetByUserID(ctx, userID)
+}
+
+func (s *StudentService) GetTasks(ctx context.Context, userID string) ([]*model.Task, error) {
+	return s.taskRepo.GetForUser(ctx, userID)
+}
+
+func (s *StudentService) SubmitTask(ctx context.Context, userID, taskID string, responseText, responseURL *string) (*model.TaskSubmission, error) {
+	if strings.TrimSpace(userID) == "" || strings.TrimSpace(taskID) == "" {
+		return nil, fmt.Errorf("user_id и task_id обязательны")
+	}
+
+	if responseText != nil {
+		value := strings.TrimSpace(*responseText)
+		if value == "" {
+			responseText = nil
+		} else {
+			responseText = &value
+		}
+	}
+	if responseURL != nil {
+		value := strings.TrimSpace(*responseURL)
+		if value == "" {
+			responseURL = nil
+		} else {
+			responseURL = &value
+		}
+	}
+	if responseText == nil && responseURL == nil {
+		return nil, fmt.Errorf("нужно добавить комментарий, ссылку или оба поля сразу")
+	}
+
+	task, err := s.taskRepo.GetByID(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+	if task.Status != "active" {
+		return nil, fmt.Errorf("задание уже закрыто")
+	}
+
+	submission := &model.TaskSubmission{
+		TaskID:       taskID,
+		UserID:       userID,
+		ResponseText: responseText,
+		ResponseURL:  responseURL,
+	}
+	if err := s.taskSubmissionRepo.Upsert(ctx, submission); err != nil {
+		return nil, err
+	}
+
+	return submission, nil
 }

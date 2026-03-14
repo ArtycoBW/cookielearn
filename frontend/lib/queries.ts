@@ -1,15 +1,20 @@
 ﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
 import type {
+  AccountCredential,
   BulkImportStudentsResponse,
   Certificate,
   LeaderboardEntry,
+  PurchaseHistoryEntry,
   Profile,
   Purchase,
   RegisterStudentResponse,
   Stats,
+  SurveySubmission,
   Task,
+  TaskSubmission,
   Transaction,
+  TransactionHistoryEntry,
 } from './types'
 
 export const queryKeys = {
@@ -19,10 +24,18 @@ export const queryKeys = {
   purchases: ['purchases'] as const,
   leaderboard: ['leaderboard'] as const,
   shopCertificates: ['shop', 'certificates'] as const,
+  certificateBackground: (id: string) => ['shop', 'certificates', id, 'background'] as const,
   adminStudents: ['admin', 'students'] as const,
+  adminAccounts: ['admin', 'accounts'] as const,
   adminCertificates: ['admin', 'certificates'] as const,
   adminTasks: ['admin', 'tasks'] as const,
+  adminTaskSubmissions: ['admin', 'task-submissions'] as const,
+  adminTransactionHistory: ['admin', 'transaction-history'] as const,
+  adminPurchaseHistory: ['admin', 'purchase-history'] as const,
   adminStats: ['admin', 'stats'] as const,
+  myTasks: ['my', 'tasks'] as const,
+  mySurvey: ['my', 'survey'] as const,
+  adminSurveys: ['admin', 'surveys'] as const,
 }
 
 export function useProfile() {
@@ -57,6 +70,18 @@ export function useShopCertificates() {
   return useQuery({
     queryKey: queryKeys.shopCertificates,
     queryFn: () => api.get<Certificate[]>('/api/shop/certificates'),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useCertificateBackground(certificateId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.certificateBackground(certificateId),
+    queryFn: () => api.get<{ background_image?: string | null }>(`/api/shop/certificates/${certificateId}/background`),
+    enabled: enabled && Boolean(certificateId),
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -82,6 +107,9 @@ export function useBuyCertificate() {
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases })
       queryClient.invalidateQueries({ queryKey: queryKeys.shopCertificates })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminPurchaseHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
     },
   })
 }
@@ -94,6 +122,7 @@ export function useBuyRandomBonus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
     },
   })
 }
@@ -132,6 +161,7 @@ export function useCreateStudent() {
     mutationFn: (payload: { id: string; full_name: string; group_name?: string }) => api.post('/api/admin/students', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
     },
   })
 }
@@ -140,10 +170,11 @@ export function useRegisterStudent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: { email: string; password: string; full_name: string; group_name?: string }) =>
+    mutationFn: (payload: { login: string; password: string; full_name: string; group_name?: string }) =>
       api.post<RegisterStudentResponse>('/api/admin/students/register', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
     },
   })
@@ -155,11 +186,11 @@ export function useBulkImportStudents() {
   return useMutation({
     mutationFn: (payload: {
       group_name?: string
-      default_password?: string
       students: Array<{ last_name: string; first_name: string; middle_name?: string }>
     }) => api.post<BulkImportStudentsResponse>('/api/admin/students/bulk-import', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
     },
   })
@@ -176,6 +207,7 @@ export function useUpdateStudent() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
     },
@@ -189,8 +221,19 @@ export function useDeleteStudent() {
     mutationFn: (id: string) => api.delete(`/api/admin/students/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminPurchaseHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
     },
+  })
+}
+
+export function useAdminAccounts() {
+  return useQuery({
+    queryKey: queryKeys.adminAccounts,
+    queryFn: () => api.get<AccountCredential[]>('/api/admin/accounts'),
   })
 }
 
@@ -206,6 +249,7 @@ export function useAwardCookies() {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
     },
   })
 }
@@ -214,6 +258,7 @@ export function useAdminCertificates() {
   return useQuery({
     queryKey: queryKeys.adminCertificates,
     queryFn: () => api.get<Certificate[]>('/api/admin/certificates'),
+    staleTime: 30_000,
   })
 }
 
@@ -260,6 +305,13 @@ export function useAdminTasks() {
   })
 }
 
+export function useAdminTaskSubmissions() {
+  return useQuery({
+    queryKey: queryKeys.adminTaskSubmissions,
+    queryFn: () => api.get<TaskSubmission[]>('/api/admin/task-submissions'),
+  })
+}
+
 export function useCreateTask() {
   const queryClient = useQueryClient()
 
@@ -281,6 +333,7 @@ export function useUpdateTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminTasks })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
     },
   })
 }
@@ -296,7 +349,42 @@ export function useCloseTask() {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
     },
+  })
+}
+
+export function useRewardTaskSubmission() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { submission_id: string; reward: number }) =>
+      api.post('/api/admin/task-submissions/reward', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTaskSubmissions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTasks })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+    },
+  })
+}
+
+export function useAdminTransactionHistory() {
+  return useQuery({
+    queryKey: queryKeys.adminTransactionHistory,
+    queryFn: () => api.get<TransactionHistoryEntry[]>('/api/admin/cookies/history'),
+  })
+}
+
+export function useAdminPurchaseHistory() {
+  return useQuery({
+    queryKey: queryKeys.adminPurchaseHistory,
+    queryFn: () => api.get<PurchaseHistoryEntry[]>('/api/admin/purchases'),
   })
 }
 
@@ -307,3 +395,67 @@ export function useAdminStats() {
     refetchInterval: 30000,
   })
 }
+
+export function useMySurvey() {
+  return useQuery({
+    queryKey: queryKeys.mySurvey,
+    queryFn: () => api.get<SurveySubmission | null>('/api/me/survey'),
+  })
+}
+
+export function useMyTasks() {
+  return useQuery({
+    queryKey: queryKeys.myTasks,
+    queryFn: () => api.get<Task[]>('/api/me/tasks'),
+  })
+}
+
+export function useSubmitTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { task_id: string; response_text?: string; response_url?: string }) =>
+      api.post(`/api/me/tasks/${payload.task_id}/submit`, {
+        response_text: payload.response_text,
+        response_url: payload.response_url,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
+    },
+  })
+}
+
+export function useSubmitSurvey() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { answers: Array<{ question_id: number; answer: string }> }) =>
+      api.post('/api/me/survey', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mySurvey })
+    },
+  })
+}
+
+export function useAdminSurveys() {
+  return useQuery({
+    queryKey: queryKeys.adminSurveys,
+    queryFn: () => api.get<SurveySubmission[]>('/api/admin/surveys'),
+  })
+}
+
+export function useRewardSurvey() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { submission_id: string; reward: number }) =>
+      api.post('/api/admin/surveys/reward', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSurveys })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+    },
+  })
+}
+

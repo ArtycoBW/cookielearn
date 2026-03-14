@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cookielearn/backend/internal/model"
+	"github.com/jackc/pgx/v5"
 )
 
 type ProfileRepository struct {
@@ -40,10 +41,17 @@ func (r *ProfileRepository) GetLeaderboard(ctx context.Context, limit int) ([]*m
 		FROM profiles
 		WHERE role = 'student'
 		ORDER BY balance DESC, created_at ASC
-		LIMIT $1
 	`
 
-	rows, err := r.db.Pool.Query(ctx, query, limit)
+	var (
+		rows pgx.Rows
+		err  error
+	)
+	if limit > 0 {
+		rows, err = r.db.Pool.Query(ctx, query+"\nLIMIT $1", limit)
+	} else {
+		rows, err = r.db.Pool.Query(ctx, query)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("get leaderboard: %w", err)
 	}
@@ -144,10 +152,11 @@ func (r *ProfileRepository) DeleteByID(ctx context.Context, id string) error {
 
 func (r *ProfileRepository) GetStudents(ctx context.Context) ([]*model.Profile, error) {
 	query := `
-		SELECT id, full_name, group_name, role, balance, created_at, last_login_at
-		FROM profiles
-		WHERE role = 'student'
-		ORDER BY full_name ASC
+		SELECT p.id, p.full_name, p.group_name, ac.login, p.role, p.balance, p.created_at, p.last_login_at
+		FROM profiles p
+		LEFT JOIN account_credentials ac ON ac.user_id = p.id
+		WHERE p.role = 'student'
+		ORDER BY p.full_name ASC
 	`
 
 	rows, err := r.db.Pool.Query(ctx, query)
@@ -159,7 +168,7 @@ func (r *ProfileRepository) GetStudents(ctx context.Context) ([]*model.Profile, 
 	var students []*model.Profile
 	for rows.Next() {
 		var p model.Profile
-		if err := rows.Scan(&p.ID, &p.FullName, &p.GroupName, &p.Role, &p.Balance, &p.CreatedAt, &p.LastLoginAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.FullName, &p.GroupName, &p.Login, &p.Role, &p.Balance, &p.CreatedAt, &p.LastLoginAt); err != nil {
 			return nil, fmt.Errorf("scan student: %w", err)
 		}
 		students = append(students, &p)
