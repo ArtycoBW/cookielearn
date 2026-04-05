@@ -39,6 +39,9 @@ func (s *StudentService) GetProfileSummary(ctx context.Context, userID string) (
 	if err != nil {
 		return nil, err
 	}
+	if recentCertificates == nil {
+		recentCertificates = make([]*model.Purchase, 0)
+	}
 	if len(recentCertificates) > 4 {
 		recentCertificates = recentCertificates[:4]
 	}

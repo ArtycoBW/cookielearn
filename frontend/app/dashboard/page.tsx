@@ -7,12 +7,11 @@ import { ArrowRight, BarChart3, Cookie, Flame, GraduationCap, Trophy } from 'luc
 import { CorgiGuide } from '@/components/corgi-guide'
 import { LevelProgressBar } from '@/components/level-progress-bar'
 import { Navigation } from '@/components/navigation'
-import { SeasonJourney } from '@/components/season-journey'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getLevelProgressMeta, getLevelTone } from '@/lib/player-progress'
 import { useClaimDailyBonus, useProfileSummary, useTransactions } from '@/lib/queries'
-import { getLevelTone } from '@/lib/player-progress'
 import { buildCorgiMood } from '@/lib/season'
 import { formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -43,6 +42,7 @@ export default function DashboardPage() {
   }
 
   const levelTone = getLevelTone(summary.profile.level_name)
+  const levelProgressMeta = getLevelProgressMeta(summary.profile.total_earned, summary.profile.level_name)
   const mood = buildCorgiMood({
     totalEarned: summary.profile.total_earned,
     streak: summary.streak.current,
@@ -72,7 +72,8 @@ export default function DashboardPage() {
             </div>
             <h1 className="text-4xl font-bold text-blue-900">Привет, {summary.profile.full_name}!</h1>
             <p className="max-w-3xl text-blue-600/75">
-              Здесь удобно забрать бонус дня, посмотреть прогресс сезона и быстро оценить, как движется твоя игровая траектория.
+              Здесь удобно забрать бонус дня, посмотреть прогресс сезона и быстро оценить, как движется твоя игровая
+              траектория.
             </p>
           </motion.div>
 
@@ -82,9 +83,9 @@ export default function DashboardPage() {
             hint="Полный профиль, тепловая карта и история достижений теперь собраны на отдельной странице профиля."
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
-              <Card className="border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-4">
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="h-full">
+              <Card className="h-full border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -97,8 +98,13 @@ export default function DashboardPage() {
               </Card>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.04 }}>
-              <Card hover={false}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.04 }}
+              className="h-full"
+            >
+              <Card hover={false} className="h-full">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -111,21 +117,28 @@ export default function DashboardPage() {
               </Card>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 }}>
-              <Card hover={false}>
-                <CardContent className="pt-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.08 }}
+              className="h-full"
+            >
+              <Card hover={false} className="h-full">
+                <CardContent className="flex h-full flex-col pt-6">
                   <div className="flex items-start justify-between gap-4">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">Уровень</p>
-                      <p className="mt-2 text-2xl font-bold text-card-foreground">{summary.profile.level_name}</p>
+                      <div className="mt-3 inline-flex max-w-full rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-card-foreground sm:text-base">
+                        <span className="truncate">{summary.profile.level_name}</span>
+                      </div>
                     </div>
-                    <GraduationCap className="mt-1 h-7 w-7 text-primary" />
+                    <GraduationCap className="mt-1 h-7 w-7 shrink-0 text-primary" />
                   </div>
 
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-auto space-y-2 pt-5">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Прогресс</span>
-                      <span>{summary.profile.next_level_name ? `До "${summary.profile.next_level_name}"` : 'Максимум'}</span>
+                      <span>{levelProgressMeta.nextLevelName ? 'До следующего рубежа' : 'Статус'}</span>
+                      <span>{levelProgressMeta.nextLevelName ? `${levelProgressMeta.remainingCookies} печ.` : 'Максимум'}</span>
                     </div>
                     <LevelProgressBar
                       totalEarned={summary.profile.total_earned}
@@ -134,13 +147,23 @@ export default function DashboardPage() {
                       trackClassName={levelTone.track}
                       fillClassName={levelTone.fill}
                     />
+                    <p className="text-sm text-muted-foreground">
+                      {levelProgressMeta.nextLevelName
+                        ? `Сейчас уже ${summary.profile.total_earned} из ${levelProgressMeta.nextThreshold} печенек.`
+                        : 'Открыт максимальный уровень.'}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.12 }}>
-              <Card hover={false}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.12 }}
+              className="h-full"
+            >
+              <Card hover={false} className="h-full">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -161,7 +184,7 @@ export default function DashboardPage() {
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
               <Card hover={false}>
                 <CardHeader>
-                  <CardTitle>Сезон и активность</CardTitle>
+                  <CardTitle>Активность</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-3">
@@ -183,8 +206,6 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   </div>
-
-                  <SeasonJourney totalEarned={summary.profile.total_earned} />
 
                   <Link href="/profile" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
                     Открыть полный профиль

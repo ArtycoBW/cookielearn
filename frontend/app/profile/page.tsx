@@ -16,7 +16,6 @@ import { ActivityHeatmap } from '@/components/activity-heatmap'
 import { CorgiGuide } from '@/components/corgi-guide'
 import { LevelProgressBar } from '@/components/level-progress-bar'
 import { Navigation } from '@/components/navigation'
-import { SeasonJourney } from '@/components/season-journey'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -132,6 +131,10 @@ export default function ProfilePage() {
 
   const levelTone = getLevelTone(summary.profile.level_name)
   const initials = getInitials(summary.profile.full_name)
+  const activityDays = summary.activity_days ?? []
+  const recentActivities = summary.recent_activities ?? []
+  const recentCertificates = summary.recent_certificates ?? []
+  const profileBadges = summary.profile.badges ?? []
 
   return (
     <>
@@ -237,7 +240,7 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle>Тепловая карта активности</CardTitle>
                 <CardDescription>
-                  Последние {summary.activity_days.length} дней. Чем насыщеннее ячейка, тем больше действий за день.
+                  Последние {activityDays.length} дней. Чем насыщеннее ячейка, тем больше действий за день.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -258,7 +261,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <ActivityHeatmap days={summary.activity_days} />
+                <ActivityHeatmap days={activityDays} />
               </CardContent>
             </Card>
 
@@ -342,12 +345,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <Card hover={false}>
-            <CardContent className="pt-6">
-              <SeasonJourney totalEarned={summary.profile.total_earned} />
-            </CardContent>
-          </Card>
-
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
             <Card hover={false}>
               <CardHeader>
@@ -355,9 +352,9 @@ export default function ProfilePage() {
                 <CardDescription>Награды, ответы и другие действия, которые двигают тебя по сезону.</CardDescription>
               </CardHeader>
               <CardContent>
-                {summary.recent_activities.length > 0 ? (
+                {recentActivities.length > 0 ? (
                   <div className="space-y-3">
-                    {summary.recent_activities.map((activity) => (
+                    {recentActivities.map((activity) => (
                       <div key={`${activity.type}-${activity.id}`} className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
@@ -402,9 +399,9 @@ export default function ProfilePage() {
                     Бейджи
                   </div>
 
-                  {summary.profile.badges && summary.profile.badges.length > 0 ? (
+                  {profileBadges.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {summary.profile.badges.map((badge) => (
+                      {profileBadges.map((badge) => (
                         <div key={badge.id} className="rounded-full border border-border/60 bg-secondary/25 px-3 py-1.5 text-sm text-card-foreground">
                           <span className="mr-2">{badge.icon}</span>
                           {badge.title}
@@ -424,9 +421,9 @@ export default function ProfilePage() {
                     Последние сертификаты
                   </div>
 
-                  {summary.recent_certificates.length > 0 ? (
+                  {recentCertificates.length > 0 ? (
                     <div className="space-y-3">
-                      {summary.recent_certificates.map((purchase) => (
+                      {recentCertificates.map((purchase) => (
                         <div key={purchase.id} className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
                           <div className="font-semibold text-card-foreground">{purchase.certificate?.title ?? 'Сертификат'}</div>
                           <div className="mt-1 text-sm text-muted-foreground">

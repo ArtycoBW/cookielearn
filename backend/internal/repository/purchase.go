@@ -49,7 +49,7 @@ func (r *PurchaseRepository) GetByUserID(ctx context.Context, userID string) ([]
 	}
 	defer rows.Close()
 
-	var purchases []*model.Purchase
+	purchases := make([]*model.Purchase, 0)
 	for rows.Next() {
 		var purchase model.Purchase
 		var certificate model.Certificate
