@@ -35,6 +35,22 @@ func (h *StudentHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, profile)
 }
 
+func (h *StudentHandler) GetMyProfileSummary(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	summary, err := h.service.GetProfileSummary(r.Context(), userID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения игрового профиля")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, summary)
+}
+
 func (h *StudentHandler) GetMyTransactions(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -74,7 +90,7 @@ func (h *StudentHandler) ClaimDailyBonus(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	bonus, err := h.service.ClaimDailyBonus(r.Context(), userID)
+	claimResult, err := h.service.ClaimDailyBonus(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -82,7 +98,7 @@ func (h *StudentHandler) ClaimDailyBonus(w http.ResponseWriter, r *http.Request)
 
 	respondJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"bonus":   bonus,
+		"claim":   claimResult,
 		"message": "Ежедневный бонус получен",
 	})
 }

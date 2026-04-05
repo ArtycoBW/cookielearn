@@ -102,6 +102,7 @@ func main() {
 		r.Use(middleware.AuthMiddleware)
 
 		r.Get("/me", studentHandler.GetMe)
+		r.Get("/me/profile-summary", studentHandler.GetMyProfileSummary)
 		r.Post("/auth/sync", studentHandler.SyncProfile)
 		r.Get("/me/transactions", studentHandler.GetMyTransactions)
 		r.Get("/me/certificates", studentHandler.GetMyCertificates)
@@ -118,6 +119,7 @@ func main() {
 			r.Get("/certificates", shopHandler.GetCertificates)
 			r.Get("/certificates/{id}/background", shopHandler.GetCertificateBackground)
 			r.Post("/certificates/{id}/buy", shopHandler.BuyCertificate)
+			r.Post("/random-bonus/buy", shopHandler.BuyRandomBonus)
 		})
 
 		r.Route("/admin", func(r chi.Router) {

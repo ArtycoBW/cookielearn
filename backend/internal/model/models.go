@@ -60,6 +60,12 @@ type BadgeAward struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type BadgePreview struct {
+	Icon   string `json:"icon"`
+	Title  string `json:"title"`
+	Reason string `json:"reason"`
+}
+
 type Certificate struct {
 	ID                string     `json:"id"`
 	Title             string     `json:"title"`
@@ -111,6 +117,57 @@ type DailyBonus struct {
 	UserID    string    `json:"user_id"`
 	AwardedAt time.Time `json:"awarded_at"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type StreakSummary struct {
+	Current            int        `json:"current"`
+	Longest            int        `json:"longest"`
+	LastClaimedAt      *time.Time `json:"last_claimed_at,omitempty"`
+	CanClaimToday      bool       `json:"can_claim_today"`
+	NextMilestone      int        `json:"next_milestone"`
+	DaysToNextMilestone int       `json:"days_to_next_milestone"`
+}
+
+type ActivityHeatmapDay struct {
+	Date      string `json:"date"`
+	Count     int    `json:"count"`
+	Intensity int    `json:"intensity"`
+	IsToday   bool   `json:"is_today"`
+}
+
+type ProfileRecentActivity struct {
+	ID        string     `json:"id"`
+	Type      string     `json:"type"`
+	Title     string     `json:"title"`
+	Subtitle  *string    `json:"subtitle,omitempty"`
+	Amount    *int       `json:"amount,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+}
+
+type FavoriteTaskCategory struct {
+	Value           string `json:"value"`
+	Label           string `json:"label"`
+	SubmissionCount int    `json:"submission_count"`
+}
+
+type ProfileSummary struct {
+	Profile              *Profile               `json:"profile"`
+	Rank                 int                    `json:"rank"`
+	Streak               StreakSummary          `json:"streak"`
+	ActivityDays         []ActivityHeatmapDay   `json:"activity_days"`
+	ActiveDaysCount      int                    `json:"active_days_count"`
+	RecentActivities     []ProfileRecentActivity `json:"recent_activities"`
+	RecentCertificates   []*Purchase            `json:"recent_certificates"`
+	FavoriteTaskCategory *FavoriteTaskCategory  `json:"favorite_task_category,omitempty"`
+}
+
+type DailyBonusClaimResult struct {
+	Bonus        *DailyBonus    `json:"bonus"`
+	BaseReward   int            `json:"base_reward"`
+	StreakReward int            `json:"streak_reward"`
+	TotalReward  int            `json:"total_reward"`
+	Streak       StreakSummary  `json:"streak"`
+	Badge        *BadgePreview  `json:"badge,omitempty"`
 }
 
 type Task struct {

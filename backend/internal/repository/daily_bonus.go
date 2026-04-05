@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cookielearn/backend/internal/model"
 )
@@ -49,4 +50,30 @@ func (r *DailyBonusRepository) HasClaimedToday(ctx context.Context, userID strin
 	}
 
 	return exists, nil
+}
+
+func (r *DailyBonusRepository) GetAwardedDates(ctx context.Context, userID string) ([]time.Time, error) {
+	query := `
+		SELECT awarded_at
+		FROM daily_bonuses
+		WHERE user_id = $1
+		ORDER BY awarded_at ASC
+	`
+
+	rows, err := r.db.Pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get awarded dates: %w", err)
+	}
+	defer rows.Close()
+
+	dates := make([]time.Time, 0)
+	for rows.Next() {
+		var awardedAt time.Time
+		if err := rows.Scan(&awardedAt); err != nil {
+			return nil, fmt.Errorf("scan awarded date: %w", err)
+		}
+		dates = append(dates, awardedAt)
+	}
+
+	return dates, nil
 }

@@ -64,7 +64,7 @@ func (s *StudentService) GetPurchases(ctx context.Context, userID string) ([]*mo
 	return s.purchRepo.GetByUserID(ctx, userID)
 }
 
-func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*model.DailyBonus, error) {
+func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*model.DailyBonusClaimResult, error) {
 	claimed, err := s.bonusRepo.HasClaimedToday(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("check claimed status: %w", err)
@@ -79,9 +79,10 @@ func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*m
 		return nil, fmt.Errorf("create bonus: %w", err)
 	}
 
+	const baseReward = 1
 	transaction := &model.Transaction{
 		UserID:   userID,
-		Amount:   1,
+		Amount:   baseReward,
 		Reason:   "Ежедневный бонус",
 		Category: strPtr("daily_bonus"),
 	}
@@ -90,7 +91,39 @@ func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*m
 		return nil, fmt.Errorf("create transaction: %w", err)
 	}
 
-	return bonus, nil
+	streak, err := s.getStreakSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("build streak summary: %w", err)
+	}
+
+	streakReward, badge := resolveStreakReward(streak.Current)
+	if streakReward > 0 || badge != nil {
+		category := "streak_bonus"
+		streakTransaction := &model.Transaction{
+			UserID:   userID,
+			Amount:   streakReward,
+			Reason:   fmt.Sprintf("Бонус за серию %d дн.", streak.Current),
+			Category: &category,
+		}
+
+		if badge != nil {
+			streakTransaction.BadgeIcon = &badge.Icon
+			streakTransaction.BadgeTitle = &badge.Title
+		}
+
+		if err := s.txRepo.Create(ctx, streakTransaction); err != nil {
+			return nil, fmt.Errorf("create streak transaction: %w", err)
+		}
+	}
+
+	return &model.DailyBonusClaimResult{
+		Bonus:        bonus,
+		BaseReward:   baseReward,
+		StreakReward: streakReward,
+		TotalReward:  baseReward + streakReward,
+		Streak:       streak,
+		Badge:        badge,
+	}, nil
 }
 
 func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*model.LeaderboardEntry, error) {

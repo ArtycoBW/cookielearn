@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -19,4 +20,8 @@ func isUndefinedColumnError(err error, column string) bool {
 
 	lowerColumn := strings.ToLower(column)
 	return strings.EqualFold(pgErr.ColumnName, column) || strings.Contains(strings.ToLower(pgErr.Message), lowerColumn)
+}
+
+func isNoRowsError(err error) bool {
+	return errors.Is(err, pgx.ErrNoRows)
 }
