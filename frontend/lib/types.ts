@@ -1,10 +1,29 @@
-﻿export interface Profile {
+export interface BadgeAward {
+  id: string
+  icon: string
+  title: string
+  reason: string
+  created_at: string
+}
+
+export interface Profile {
   id: string
   full_name: string
   group_name?: string | null
   login?: string | null
   role: 'student' | 'admin'
   balance: number
+  total_earned: number
+  activity_score: number
+  level_name?: string | null
+  next_level_name?: string | null
+  level_progress: number
+  submitted_tasks: number
+  reviewed_tasks: number
+  purchase_count: number
+  survey_completed: boolean
+  badge_count: number
+  badges?: BadgeAward[]
   created_at: string
   last_login_at?: string | null
 }
@@ -15,6 +34,8 @@ export interface Transaction {
   amount: number
   reason: string
   category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | null
+  badge_icon?: string | null
+  badge_title?: string | null
   created_by?: string | null
   created_at: string
 }
@@ -28,6 +49,8 @@ export interface TransactionHistoryEntry {
   amount: number
   reason: string
   category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | null
+  badge_icon?: string | null
+  badge_title?: string | null
   created_by?: string | null
   created_by_name?: string | null
   created_at: string
@@ -91,6 +114,13 @@ export interface LeaderboardEntry {
   group_name?: string | null
   login?: string | null
   balance: number
+  total_earned: number
+  activity_score: number
+  level_name: string
+  next_level_name?: string | null
+  level_progress: number
+  badge_count: number
+  badges?: BadgeAward[]
   rank: number
 }
 
@@ -182,5 +212,3 @@ export interface SurveySubmission {
   reward_given?: number | null
   user?: Profile
 }
-
-

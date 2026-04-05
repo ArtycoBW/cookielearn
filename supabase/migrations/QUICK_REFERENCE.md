@@ -251,7 +251,6 @@ GET  /api/leaderboard             - Таблица лидеров
 
 GET  /api/shop/certificates       - Каталог сертификатов
 POST /api/shop/certificates/{id}/buy - Купить сертификат
-POST /api/shop/random-bonus/buy   - Купить случайный бонус
 ```
 
 ## Файлы миграций

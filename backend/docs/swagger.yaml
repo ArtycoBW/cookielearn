@@ -194,51 +194,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/shop/random-bonus/buy:
-    post:
-      tags:
-        - Shop
-      summary: Купить случайный бонус
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                cost:
-                  type: integer
-                  example: 3
-                  description: Стоимость попытки
-      responses:
-        '200':
-          description: Бонус получен
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  cost:
-                    type: integer
-                    example: 3
-                  reward:
-                    type: integer
-                    example: 5
-                  message:
-                    type: string
-                    example: "Вы выиграли 5 печенек!"
-        '400':
-          description: Недостаточно печенек
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
 components:
   securitySchemes:
     BearerAuth:

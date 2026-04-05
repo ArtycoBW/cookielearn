@@ -178,33 +178,6 @@
               ]
             }
           }
-        },
-        {
-          "name": "Buy Random Bonus",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cost\": 3\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/shop/random-bonus/buy",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "shop", "random-bonus", "buy"]
-            }
-          }
         }
       ]
     }

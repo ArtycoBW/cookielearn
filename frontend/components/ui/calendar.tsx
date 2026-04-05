@@ -14,7 +14,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
     <DayPicker
       showOutsideDays={showOutsideDays}
       locale={ru}
-      className={cn('p-1', className)}
+      className={cn('rounded-[1.6rem] bg-popover p-3', className)}
       classNames={{
         months: 'flex flex-col gap-4 sm:flex-row sm:gap-6',
         month: 'space-y-4',

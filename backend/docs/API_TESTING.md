@@ -75,16 +75,6 @@ curl -X POST \
   http://localhost:8080/api/shop/certificates/CERTIFICATE_ID/buy
 ```
 
-### Купить случайный бонус
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"cost": 3}' \
-  http://localhost:8080/api/shop/random-bonus/buy
-```
-
 ### Получить купленные сертификаты
 
 ```bash

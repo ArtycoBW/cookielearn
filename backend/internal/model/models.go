@@ -9,6 +9,17 @@ type Profile struct {
 	Login       *string    `json:"login,omitempty"`
 	Role        string     `json:"role"`
 	Balance     int        `json:"balance"`
+	TotalEarned int        `json:"total_earned"`
+	ActivityScore int      `json:"activity_score"`
+	LevelName   string     `json:"level_name,omitempty"`
+	NextLevelName *string  `json:"next_level_name,omitempty"`
+	LevelProgress int      `json:"level_progress"`
+	SubmittedTasks int     `json:"submitted_tasks"`
+	ReviewedTasks int      `json:"reviewed_tasks"`
+	PurchaseCount int      `json:"purchase_count"`
+	SurveyCompleted bool   `json:"survey_completed"`
+	BadgeCount   int       `json:"badge_count"`
+	Badges       []BadgeAward `json:"badges,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	LastLoginAt *time.Time `json:"last_login_at"`
 }
@@ -19,6 +30,8 @@ type Transaction struct {
 	Amount    int       `json:"amount"`
 	Reason    string    `json:"reason"`
 	Category  *string   `json:"category"`
+	BadgeIcon *string   `json:"badge_icon,omitempty"`
+	BadgeTitle *string  `json:"badge_title,omitempty"`
 	CreatedBy *string   `json:"created_by"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -32,9 +45,19 @@ type TransactionHistoryEntry struct {
 	Amount        int       `json:"amount"`
 	Reason        string    `json:"reason"`
 	Category      *string   `json:"category"`
+	BadgeIcon     *string   `json:"badge_icon,omitempty"`
+	BadgeTitle    *string   `json:"badge_title,omitempty"`
 	CreatedBy     *string   `json:"created_by"`
 	CreatedByName *string   `json:"created_by_name"`
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+type BadgeAward struct {
+	ID        string    `json:"id"`
+	Icon      string    `json:"icon"`
+	Title     string    `json:"title"`
+	Reason    string    `json:"reason"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Certificate struct {
@@ -130,11 +153,19 @@ type TaskSubmission struct {
 }
 
 type LeaderboardEntry struct {
-	ID        string  `json:"id"`
-	FullName  string  `json:"full_name"`
-	GroupName *string `json:"group_name"`
-	Balance   int     `json:"balance"`
-	Rank      int     `json:"rank"`
+	ID            string       `json:"id"`
+	FullName      string       `json:"full_name"`
+	GroupName     *string      `json:"group_name"`
+	Login         *string      `json:"login,omitempty"`
+	Balance       int          `json:"balance"`
+	TotalEarned   int          `json:"total_earned"`
+	ActivityScore int          `json:"activity_score"`
+	LevelName     string       `json:"level_name"`
+	NextLevelName *string      `json:"next_level_name,omitempty"`
+	LevelProgress int          `json:"level_progress"`
+	BadgeCount    int          `json:"badge_count"`
+	Badges        []BadgeAward `json:"badges,omitempty"`
+	Rank          int          `json:"rank"`
 }
 
 type Stats struct {

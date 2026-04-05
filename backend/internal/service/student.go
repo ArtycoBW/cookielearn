@@ -40,7 +40,16 @@ func NewStudentService(
 }
 
 func (s *StudentService) GetProfile(ctx context.Context, userID string) (*model.Profile, error) {
-	return s.profileRepo.GetByID(ctx, userID)
+	profile, err := s.profileRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := applyProgressToProfiles(ctx, s.profileRepo, []*model.Profile{profile}); err != nil {
+		return nil, err
+	}
+
+	return profile, nil
 }
 
 func (s *StudentService) GetTransactions(ctx context.Context, userID string, limit int) ([]*model.Transaction, error) {
@@ -85,7 +94,27 @@ func (s *StudentService) ClaimDailyBonus(ctx context.Context, userID string) (*m
 }
 
 func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*model.LeaderboardEntry, error) {
-	return s.profileRepo.GetLeaderboard(ctx, limit)
+	profiles, err := s.profileRepo.GetStudents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := applyProgressToProfiles(ctx, s.profileRepo, profiles); err != nil {
+		return nil, err
+	}
+
+	entries := buildLeaderboardEntries(profiles)
+	if limit > 0 && len(entries) > limit {
+		entries = entries[:limit]
+	}
+
+	result := make([]*model.LeaderboardEntry, 0, len(entries))
+	for index := range entries {
+		entry := entries[index]
+		result = append(result, &entry)
+	}
+
+	return result, nil
 }
 
 func (s *StudentService) SyncProfile(
@@ -106,7 +135,16 @@ func (s *StudentService) SyncProfile(
 		role = "student"
 	}
 
-	return s.profileRepo.UpsertFromAuth(ctx, userID, strings.TrimSpace(fullName), groupName, role)
+	profile, err := s.profileRepo.UpsertFromAuth(ctx, userID, strings.TrimSpace(fullName), groupName, role)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := applyProgressToProfiles(ctx, s.profileRepo, []*model.Profile{profile}); err != nil {
+		return nil, err
+	}
+
+	return profile, nil
 }
 
 func (s *StudentService) UseCertificate(ctx context.Context, userID, purchaseID string) error {
@@ -161,6 +199,10 @@ func (s *StudentService) SubmitSurvey(ctx context.Context, userID string, answer
 }
 
 func (s *StudentService) GetTasks(ctx context.Context, userID string) ([]*model.Task, error) {
+	if err := s.taskRepo.CloseExpired(ctx); err != nil {
+		return nil, err
+	}
+
 	return s.taskRepo.GetForUser(ctx, userID)
 }
 
@@ -187,6 +229,10 @@ func (s *StudentService) SubmitTask(ctx context.Context, userID, taskID string, 
 	}
 	if responseText == nil && responseURL == nil {
 		return nil, fmt.Errorf("нужно добавить комментарий, ссылку или оба поля сразу")
+	}
+
+	if err := s.taskRepo.CloseExpired(ctx); err != nil {
+		return nil, err
 	}
 
 	task, err := s.taskRepo.GetByID(ctx, taskID)

@@ -187,25 +187,13 @@ http://localhost:8080/api/docs
 - Execute
 - Ожидаемый результат: информация о покупке
 
-### 7. Buy Random Bonus
-
-- Endpoint: `POST /api/shop/random-bonus/buy`
-- Request body:
-```json
-{
-  "cost": 3
-}
-```
-- Execute
-- Ожидаемый результат: количество выигранных печенек
-
-### 8. Get My Certificates
+### 7. Get My Certificates
 
 - Endpoint: `GET /api/me/certificates`
 - Execute
 - Ожидаемый результат: массив купленных сертификатов
 
-### 9. Get Transactions
+### 8. Get Transactions
 
 - Endpoint: `GET /api/me/transactions`
 - Execute

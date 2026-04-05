@@ -118,7 +118,6 @@ func main() {
 			r.Get("/certificates", shopHandler.GetCertificates)
 			r.Get("/certificates/{id}/background", shopHandler.GetCertificateBackground)
 			r.Post("/certificates/{id}/buy", shopHandler.BuyCertificate)
-			r.Post("/random-bonus/buy", shopHandler.BuyRandomBonus)
 		})
 
 		r.Route("/admin", func(r chi.Router) {
@@ -143,6 +142,7 @@ func main() {
 			r.Get("/tasks", adminHandler.GetTasks)
 			r.Post("/tasks", adminHandler.CreateTask)
 			r.Put("/tasks/{id}", adminHandler.UpdateTask)
+			r.Delete("/tasks/{id}", adminHandler.DeleteTask)
 			r.Post("/tasks/{id}/close", adminHandler.CloseTask)
 			r.Get("/task-submissions", adminHandler.GetTaskSubmissions)
 			r.Post("/task-submissions/reward", adminHandler.RewardTaskSubmission)

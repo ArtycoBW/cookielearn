@@ -73,7 +73,16 @@ func NewAdminService(
 }
 
 func (s *AdminService) GetStudents(ctx context.Context) ([]*model.Profile, error) {
-	return s.profileRepo.GetStudents(ctx)
+	students, err := s.profileRepo.GetStudents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := applyProgressToProfiles(ctx, s.profileRepo, students); err != nil {
+		return nil, err
+	}
+
+	return students, nil
 }
 
 func (s *AdminService) CreateStudent(ctx context.Context, profile *model.Profile) error {
@@ -227,17 +236,32 @@ func (s *AdminService) AwardCookies(
 	amount int,
 	reason string,
 	category *string,
+	badgeIcon *string,
+	badgeTitle *string,
 ) error {
 	if userID == "" || amount == 0 || strings.TrimSpace(reason) == "" {
 		return fmt.Errorf("user_id, amount и reason обязательны")
 	}
 
+	normalizedBadgeIcon := normalizeOptionalText(badgeIcon)
+	normalizedBadgeTitle := normalizeOptionalText(badgeTitle)
+	if normalizedBadgeIcon != nil || normalizedBadgeTitle != nil {
+		if amount < 0 {
+			return fmt.Errorf("Р±РµР№РґР¶ РјРѕР¶РЅРѕ РІС‹РґР°РІР°С‚СЊ С‚РѕР»СЊРєРѕ РїСЂРё РЅР°С‡РёСЃР»РµРЅРёРё, Р° РЅРµ СЃРїРёСЃР°РЅРёРё")
+		}
+		if normalizedBadgeIcon == nil || normalizedBadgeTitle == nil {
+			return fmt.Errorf("РґР»СЏ Р±РµР№РґР¶Р° РЅСѓР¶РЅРѕ СѓРєР°Р·Р°С‚СЊ Рё РёРєРѕРЅРєСѓ, Рё РЅР°Р·РІР°РЅРёРµ")
+		}
+	}
+
 	tx := &model.Transaction{
-		UserID:    userID,
-		Amount:    amount,
-		Reason:    strings.TrimSpace(reason),
-		Category:  category,
-		CreatedBy: &adminID,
+		UserID:     userID,
+		Amount:     amount,
+		Reason:     strings.TrimSpace(reason),
+		Category:   category,
+		BadgeIcon:  normalizedBadgeIcon,
+		BadgeTitle: normalizedBadgeTitle,
+		CreatedBy:  &adminID,
 	}
 
 	return s.txRepo.Create(ctx, tx)
@@ -288,6 +312,10 @@ func (s *AdminService) DeleteCertificate(ctx context.Context, id string) error {
 }
 
 func (s *AdminService) GetTasks(ctx context.Context) ([]*model.Task, error) {
+	if err := s.taskRepo.CloseExpired(ctx); err != nil {
+		return nil, err
+	}
+
 	return s.taskRepo.GetAll(ctx)
 }
 
@@ -297,6 +325,7 @@ func (s *AdminService) CreateTask(ctx context.Context, task *model.Task, adminID
 	}
 
 	task.Title = strings.TrimSpace(task.Title)
+	task.Type = strings.TrimSpace(task.Type)
 	if task.Description != nil {
 		description := strings.TrimSpace(*task.Description)
 		if description == "" {
@@ -325,6 +354,7 @@ func (s *AdminService) UpdateTask(ctx context.Context, task *model.Task) error {
 	}
 
 	task.Title = strings.TrimSpace(task.Title)
+	task.Type = strings.TrimSpace(task.Type)
 	if task.Description != nil {
 		description := strings.TrimSpace(*task.Description)
 		if description == "" {
@@ -345,7 +375,19 @@ func (s *AdminService) CloseTask(ctx context.Context, taskID string) error {
 	return s.taskRepo.Close(ctx, taskID)
 }
 
+func (s *AdminService) DeleteTask(ctx context.Context, taskID string) error {
+	if strings.TrimSpace(taskID) == "" {
+		return fmt.Errorf("task id обязателен")
+	}
+
+	return s.taskRepo.Delete(ctx, taskID)
+}
+
 func (s *AdminService) GetTaskSubmissions(ctx context.Context) ([]*model.TaskSubmission, error) {
+	if err := s.taskRepo.CloseExpired(ctx); err != nil {
+		return nil, err
+	}
+
 	return s.taskSubmissionRepo.GetAll(ctx)
 }
 
@@ -355,6 +397,10 @@ func (s *AdminService) RewardTaskSubmission(ctx context.Context, adminID, submis
 	}
 	if reward < 0 {
 		return fmt.Errorf("reward не может быть отрицательным")
+	}
+
+	if err := s.taskRepo.CloseExpired(ctx); err != nil {
+		return err
 	}
 
 	submission, err := s.taskSubmissionRepo.GetByID(ctx, submissionID)
@@ -431,6 +477,19 @@ func (s *AdminService) RewardSurvey(ctx context.Context, adminID, submissionID s
 	}
 
 	return s.surveyRepo.MarkRewarded(ctx, submissionID, reward)
+}
+
+func normalizeOptionalText(value *string) *string {
+	if value == nil {
+		return nil
+	}
+
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return nil
+	}
+
+	return &trimmed
 }
 
 func buildFullName(lastName, firstName, middleName string) string {

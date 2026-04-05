@@ -28,15 +28,6 @@ Authorization: Bearer {{token}}
 POST {{baseUrl}}/api/shop/certificates/CERTIFICATE_ID_HERE/buy
 Authorization: Bearer {{token}}
 
-### Buy Random Bonus
-POST {{baseUrl}}/api/shop/random-bonus/buy
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "cost": 3
-}
-
 ### Get My Certificates
 GET {{baseUrl}}/api/me/certificates
 Authorization: Bearer {{token}}

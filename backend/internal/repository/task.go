@@ -273,3 +273,35 @@ func (r *TaskRepository) Close(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (r *TaskRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM tasks WHERE id = $1`
+
+	result, err := r.db.Pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("delete task: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("задача не найдена")
+	}
+
+	return nil
+}
+
+func (r *TaskRepository) CloseExpired(ctx context.Context) error {
+	query := `
+		UPDATE tasks
+		SET status = 'closed',
+			closed_at = COALESCE(closed_at, NOW())
+		WHERE status = 'active'
+		  AND deadline IS NOT NULL
+		  AND deadline < NOW()
+	`
+
+	if _, err := r.db.Pool.Exec(ctx, query); err != nil {
+		return fmt.Errorf("close expired tasks: %w", err)
+	}
+
+	return nil
+}

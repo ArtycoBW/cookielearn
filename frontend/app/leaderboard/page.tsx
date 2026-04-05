@@ -7,7 +7,7 @@ export default function LeaderboardPage() {
   return (
     <>
       <Navigation />
-      <LeaderboardView title="Таблица лидеров" description="Полный рейтинг студентов по печенькам без ограничения в 20 записей." />
+      <LeaderboardView title="Таблица лидеров" description="Полный рейтинг студентов по общему заработку с уровнями и бейджами." />
     </>
   )
 }

@@ -42,7 +42,12 @@ type ParsedStudent = {
   middle_name?: string
 }
 
-type StudentSort = 'name-asc' | 'name-desc' | 'balance-desc' | 'balance-asc'
+type StudentSortKey = 'full_name' | 'login' | 'group_name' | 'last_login_at' | 'balance'
+type SortDirection = 'asc' | 'desc'
+type StudentSort = {
+  key: StudentSortKey
+  direction: SortDirection
+}
 
 function formatStudentName(student: ParsedStudent) {
   return [student.last_name, student.first_name, student.middle_name].filter(Boolean).join(' ')
@@ -152,7 +157,7 @@ export default function AdminStudentsPage() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
-  const [studentSort, setStudentSort] = useState<StudentSort>('name-asc')
+  const [studentSort, setStudentSort] = useState<StudentSort>({ key: 'full_name', direction: 'asc' })
   const [editing, setEditing] = useState<Record<string, { full_name: string; group_name: string }>>({})
   const [activeEditId, setActiveEditId] = useState<string | null>(null)
 
@@ -179,17 +184,24 @@ export default function AdminStudentsPage() {
       return matchesSearch && matchesGroup
     })
 
+    const direction = studentSort.direction === 'asc' ? 1 : -1
+
     return [...filtered].sort((left, right) => {
-      switch (studentSort) {
-        case 'name-desc':
-          return right.full_name.localeCompare(left.full_name, 'ru')
-        case 'balance-desc':
-          return right.balance - left.balance || left.full_name.localeCompare(right.full_name, 'ru')
-        case 'balance-asc':
-          return left.balance - right.balance || left.full_name.localeCompare(right.full_name, 'ru')
-        case 'name-asc':
+      switch (studentSort.key) {
+        case 'login':
+          return ((left.login || '').localeCompare(right.login || '', 'ru') || left.full_name.localeCompare(right.full_name, 'ru')) * direction
+        case 'group_name':
+          return ((left.group_name || '').localeCompare(right.group_name || '', 'ru') || left.full_name.localeCompare(right.full_name, 'ru')) * direction
+        case 'last_login_at': {
+          const leftTime = left.last_login_at ? new Date(left.last_login_at).getTime() : 0
+          const rightTime = right.last_login_at ? new Date(right.last_login_at).getTime() : 0
+          return ((leftTime - rightTime) || left.full_name.localeCompare(right.full_name, 'ru')) * direction
+        }
+        case 'balance':
+          return ((left.balance - right.balance) || left.full_name.localeCompare(right.full_name, 'ru')) * direction
+        case 'full_name':
         default:
-          return left.full_name.localeCompare(right.full_name, 'ru')
+          return left.full_name.localeCompare(right.full_name, 'ru') * direction
       }
     })
   }, [studentList, searchQuery, groupFilter, studentSort])
@@ -388,6 +400,30 @@ export default function AdminStudentsPage() {
     } catch (error: any) {
       toast.error(error.message || 'Не удалось удалить студента')
     }
+  }
+
+  const toggleStudentSort = (key: StudentSortKey) => {
+    setStudentSort((current) => {
+      if (current.key === key) {
+        return {
+          key,
+          direction: current.direction === 'asc' ? 'desc' : 'asc',
+        }
+      }
+
+      return {
+        key,
+        direction: key === 'last_login_at' || key === 'balance' ? 'desc' : 'asc',
+      }
+    })
+  }
+
+  const getSortLabel = (key: StudentSortKey) => {
+    if (studentSort.key !== key) {
+      return 'Сортировать'
+    }
+
+    return studentSort.direction === 'asc' ? 'По возрастанию' : 'По убыванию'
   }
 
   return (
@@ -664,7 +700,7 @@ export default function AdminStudentsPage() {
                         <p className="mt-3 text-sm text-muted-foreground">Найдено: {filteredStudents.length}</p>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:min-w-[920px]">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:min-w-[760px]">
                         <div className="relative">
                           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
@@ -688,18 +724,6 @@ export default function AdminStudentsPage() {
                             ))}
                           </SelectContent>
                         </Select>
-
-                        <Select value={studentSort} onValueChange={(value) => setStudentSort(value as StudentSort)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Сортировка" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="name-asc">Имя: А → Я</SelectItem>
-                            <SelectItem value="name-desc">Имя: Я → А</SelectItem>
-                            <SelectItem value="balance-desc">Печеньки: больше → меньше</SelectItem>
-                            <SelectItem value="balance-asc">Печеньки: меньше → больше</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
 
@@ -711,8 +735,40 @@ export default function AdminStudentsPage() {
                       </div>
                     ) : filteredStudents.length > 0 ? (
                       <div className="overflow-x-auto rounded-3xl border border-border/60 bg-card/55">
-                        <div className="min-w-[1240px]">
-                          <div className="grid grid-cols-[minmax(240px,2fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(170px,1.2fr)_110px_220px] gap-4 border-b border-border/40 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <div className="min-w-[1120px]">
+                          <div className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3">
+                            {[
+                              ['full_name', 'ФИО'],
+                              ['login', 'Логин'],
+                              ['group_name', 'Группа'],
+                              ['last_login_at', 'Последний вход'],
+                              ['balance', 'Печеньки'],
+                            ].map(([key, label]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => toggleStudentSort(key as StudentSortKey)}
+                                className={`inline-flex items-center justify-start rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                  studentSort.key === key
+                                    ? 'border-primary/30 bg-primary/10 text-primary'
+                                    : 'border-border/60 bg-card/70 text-muted-foreground hover:bg-secondary/40'
+                                }`}
+                                title={getSortLabel(key as StudentSortKey)}
+                              >
+                                {label}
+                                <span className="ml-2 text-[11px]">
+                                  {studentSort.key === key ? (studentSort.direction === 'asc' ? '↑' : '↓') : '↕'}
+                                </span>
+                              </button>
+                            ))}
+                            <div className="flex items-center justify-end">
+                              <span className="rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                                Без сортировки
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                             <div>ФИО</div>
                             <div>Логин</div>
                             <div>Группа</div>
@@ -732,7 +788,7 @@ export default function AdminStudentsPage() {
                               return (
                                 <div
                                   key={student.id}
-                                  className="grid grid-cols-[minmax(240px,2fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(170px,1.2fr)_110px_220px] items-center gap-4 px-5 py-3 transition-colors hover:bg-secondary/20"
+                                  className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] items-center gap-4 px-5 py-3 transition-colors hover:bg-secondary/20"
                                 >
                                   <div className="min-w-0">
                                     {isEditing ? (
@@ -747,9 +803,24 @@ export default function AdminStudentsPage() {
                                         className="h-9 border-transparent bg-transparent px-0 font-medium shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                       />
                                     ) : (
-                                      <p className="truncate font-medium text-card-foreground" title={student.full_name}>
-                                        {student.full_name}
-                                      </p>
+                                      <div className="min-w-0">
+                                        <p className="truncate font-medium text-card-foreground" title={student.full_name}>
+                                          {student.full_name}
+                                        </p>
+                                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                                          {student.level_name && <Badge variant="default">{student.level_name}</Badge>}
+                                          {student.badges?.slice(0, 2).map((badge) => (
+                                            <span
+                                              key={badge.id}
+                                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/75 px-2.5 py-1 text-xs text-card-foreground"
+                                              title={badge.reason}
+                                            >
+                                              <span>{badge.icon}</span>
+                                              <span>{badge.title}</span>
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
                                     )}
                                   </div>
 
@@ -787,36 +858,39 @@ export default function AdminStudentsPage() {
                                     )}
                                   </div>
 
-                                  <div>
+                                  <div className="space-y-1">
                                     <div className="inline-flex min-w-[86px] items-center justify-center rounded-full bg-secondary/55 px-3 py-1.5 text-sm font-semibold text-card-foreground">
                                       {student.balance} 🍪
                                     </div>
+                                    <div className="text-xs text-muted-foreground">Всего: {student.total_earned ?? 0} 🍪</div>
                                   </div>
 
-                                  <div className="flex justify-end gap-2">
+                                  <div className="ml-auto grid w-full max-w-[170px] grid-cols-2 gap-2">
                                     {isEditing ? (
                                       <>
-                                        <Button size="sm" onClick={() => handleSave(student.id)} isLoading={updateStudent.isPending}>
+                                        <Button size="sm" onClick={() => handleSave(student.id)} isLoading={updateStudent.isPending} className="w-full">
                                           Сохранить
                                         </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => handleCancelEdit(student.id)}>
+                                        <Button size="sm" variant="ghost" onClick={() => handleCancelEdit(student.id)} className="w-full">
                                           Отмена
                                         </Button>
                                       </>
                                     ) : (
-                                      <Button size="sm" variant="ghost" onClick={() => handleStartEdit(student)}>
-                                        Изменить
-                                      </Button>
+                                      <>
+                                        <Button size="sm" variant="ghost" onClick={() => handleStartEdit(student)} className="w-full">
+                                          Изменить
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleDelete(student)}
+                                          disabled={deleteStudent.isPending}
+                                          className="w-full"
+                                        >
+                                          Удалить
+                                        </Button>
+                                      </>
                                     )}
-
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleDelete(student)}
-                                      disabled={deleteStudent.isPending}
-                                    >
-                                      Удалить
-                                    </Button>
                                   </div>
                                 </div>
                               )

@@ -192,10 +192,12 @@ func (h *AdminHandler) AwardCookies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		UserID   string  `json:"user_id"`
-		Amount   int     `json:"amount"`
-		Reason   string  `json:"reason"`
-		Category *string `json:"category"`
+		UserID     string  `json:"user_id"`
+		Amount     int     `json:"amount"`
+		Reason     string  `json:"reason"`
+		Category   *string `json:"category"`
+		BadgeIcon  *string `json:"badge_icon"`
+		BadgeTitle *string `json:"badge_title"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "неверный формат запроса")
@@ -209,6 +211,8 @@ func (h *AdminHandler) AwardCookies(w http.ResponseWriter, r *http.Request) {
 		req.Amount,
 		strings.TrimSpace(req.Reason),
 		normalizeOptional(req.Category),
+		normalizeOptional(req.BadgeIcon),
+		normalizeOptional(req.BadgeTitle),
 	); err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -361,6 +365,20 @@ func (h *AdminHandler) CloseTask(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"message": "Задание закрыто",
+	})
+}
+
+func (h *AdminHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	taskID := chi.URLParam(r, "id")
+
+	if err := h.service.DeleteTask(r.Context(), taskID); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"message": "Задание удалено",
 	})
 }
 

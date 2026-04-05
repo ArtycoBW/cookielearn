@@ -114,19 +114,6 @@ export function useBuyCertificate() {
   })
 }
 
-export function useBuyRandomBonus() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (cost: number) => api.post('/api/shop/random-bonus/buy', { cost }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
-      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
-    },
-  })
-}
-
 export function useMyCertificates() {
   return useQuery({
     queryKey: queryKeys.purchases,
@@ -241,7 +228,7 @@ export function useAwardCookies() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: { user_id: string; amount: number; reason: string; category?: string }) =>
+    mutationFn: (payload: { user_id: string; amount: number; reason: string; category?: string; badge_icon?: string; badge_title?: string }) =>
       api.post('/api/admin/cookies/award', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
@@ -349,6 +336,20 @@ export function useCloseTask() {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
+    },
+  })
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (taskId: string) => api.delete(`/api/admin/tasks/${taskId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTasks })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTaskSubmissions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
       queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
     },
   })

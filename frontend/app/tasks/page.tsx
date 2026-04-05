@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarDays, ExternalLink, Link2, MessageSquare, SendHorizonal } from 'lucide-react'
+import { CalendarDays, ExternalLink, Link2, MessageSquare, SendHorizonal, TextQuote } from 'lucide-react'
 import { Navigation } from '@/components/navigation'
+import { RichText } from '@/components/rich-text'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useMyTasks, useSubmitTask } from '@/lib/queries'
+import { resolveTaskTypeLabel } from '@/lib/task-types'
 import type { Task } from '@/lib/types'
 import { formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -18,19 +20,6 @@ import { toast } from 'sonner'
 type DraftState = {
   response_text: string
   response_url: string
-}
-
-function typeLabel(type: string) {
-  switch (type) {
-    case 'feedback':
-      return 'Замечание по материалам'
-    case 'sql':
-      return 'SQL-задание'
-    case 'meme':
-      return 'Мем по SQL'
-    default:
-      return 'Другое'
-  }
 }
 
 function buildDrafts(tasks: Task[]) {
@@ -41,6 +30,18 @@ function buildDrafts(tasks: Task[]) {
     }
     return accumulator
   }, {})
+}
+
+function isTaskClosed(task: Task) {
+  if (task.status === 'closed') {
+    return true
+  }
+
+  if (!task.deadline) {
+    return false
+  }
+
+  return new Date(task.deadline).getTime() < Date.now()
 }
 
 export default function TasksPage() {
@@ -54,8 +55,8 @@ export default function TasksPage() {
     }
   }, [tasks])
 
-  const activeTasks = useMemo(() => (tasks ?? []).filter((task) => task.status === 'active'), [tasks])
-  const closedTasks = useMemo(() => (tasks ?? []).filter((task) => task.status === 'closed'), [tasks])
+  const activeTasks = useMemo(() => (tasks ?? []).filter((task) => !isTaskClosed(task)), [tasks])
+  const closedTasks = useMemo(() => (tasks ?? []).filter((task) => isTaskClosed(task)), [tasks])
 
   const handleChange = (taskID: string, field: keyof DraftState, value: string) => {
     setDrafts((current) => ({
@@ -69,6 +70,11 @@ export default function TasksPage() {
   }
 
   const handleSubmit = async (task: Task) => {
+    if (isTaskClosed(task)) {
+      toast.error('Срок задания уже истёк, отправка закрыта')
+      return
+    }
+
     const draft = drafts[task.id] || { response_text: '', response_url: '' }
 
     try {
@@ -87,31 +93,40 @@ export default function TasksPage() {
     const draft = drafts[task.id] || { response_text: '', response_url: '' }
     const submission = task.my_submission
     const isReviewed = Boolean(submission?.reviewed)
+    const closed = isTaskClosed(task)
 
     return (
       <motion.div key={task.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-2">
+        <Card className="overflow-hidden">
+          <CardHeader className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <CardTitle>{task.title}</CardTitle>
-                  <Badge variant={task.status === 'active' ? 'success' : 'warning'}>
-                    {task.status === 'active' ? 'Активно' : 'Закрыто'}
-                  </Badge>
-                  <Badge>{typeLabel(task.type)}</Badge>
+                  <CardTitle className="text-2xl">{task.title}</CardTitle>
+                  <Badge variant={closed ? 'warning' : 'success'}>{closed ? 'Закрыто' : 'Активно'}</Badge>
+                  <Badge>{resolveTaskTypeLabel(task.type)}</Badge>
                 </div>
-                <CardDescription>{task.description || 'Описание не заполнено.'}</CardDescription>
+
+                <div className="rounded-3xl border border-border/60 bg-secondary/25 p-4 sm:p-5">
+                  {task.description ? (
+                    <RichText text={task.description} className="text-base text-muted-foreground" />
+                  ) : (
+                    <CardDescription>Описание не заполнено.</CardDescription>
+                  )}
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-secondary/55 px-4 py-3 text-right">
-                <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Максимум</div>
-                <div className="text-2xl font-bold text-card-foreground">{task.reward} 🍪</div>
+              <div className="rounded-[1.35rem] border border-border/50 bg-secondary/45 px-4 py-3 text-right shadow-sm lg:min-w-[148px]">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Максимум</div>
+                <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[2rem] font-bold leading-none text-card-foreground">
+                  <span>{task.reward}</span>
+                  <span>🍪</span>
+                </div>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               {task.deadline ? (
                 <span className="inline-flex items-center gap-2">
@@ -126,7 +141,7 @@ export default function TasksPage() {
             </div>
 
             {submission && (
-              <div className="rounded-2xl border border-border/60 bg-secondary/35 p-4">
+              <div className="rounded-3xl border border-border/60 bg-secondary/35 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={submission.reviewed ? 'success' : 'default'}>
                     {submission.reviewed ? 'Проверено' : 'На проверке'}
@@ -134,14 +149,22 @@ export default function TasksPage() {
                   {submission.reward_given != null && <Badge variant="warning">Выдано: {submission.reward_given} 🍪</Badge>}
                 </div>
 
-                {submission.response_text && <p className="mt-3 text-sm text-card-foreground">{submission.response_text}</p>}
+                {submission.response_text && (
+                  <div className="mt-4 rounded-2xl bg-card/60 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-card-foreground">
+                      <TextQuote className="h-4 w-4 text-primary" />
+                      Комментарий
+                    </div>
+                    <RichText text={submission.response_text} className="text-card-foreground" />
+                  </div>
+                )}
 
                 {submission.response_url && (
                   <a
                     href={submission.response_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                   >
                     <ExternalLink className="h-4 w-4" />
                     Открыть прикреплённую ссылку
@@ -150,8 +173,8 @@ export default function TasksPage() {
               </div>
             )}
 
-            {task.status === 'active' ? (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {!closed ? (
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
                     <Link2 className="h-4 w-4 text-primary" />
@@ -173,24 +196,24 @@ export default function TasksPage() {
                   <Textarea
                     value={draft.response_text}
                     onChange={(event) => handleChange(task.id, 'response_text', event.target.value)}
-                    placeholder="Коротко опишите, что вы исправили, нашли или приложили"
-                    className="min-h-[112px]"
+                    placeholder={'Поддерживаются переносы строк, списки через "- " и выделение через **жирный**.'}
+                    className="min-h-[148px] resize-y leading-6"
                     disabled={isReviewed}
                   />
                 </div>
 
-                <div className="lg:col-span-2 flex flex-wrap items-center gap-3">
+                <div className="xl:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Можно приложить только ссылку, только комментарий или оба поля сразу.
+                  </p>
                   <Button onClick={() => handleSubmit(task)} isLoading={submitTask.isPending} disabled={isReviewed}>
                     <SendHorizonal className="h-4 w-4" />
                     {submission ? 'Обновить ответ' : 'Отправить ответ'}
                   </Button>
-                  <p className="text-sm text-muted-foreground">
-                    Можно приложить только ссылку, только комментарий или оба поля сразу.
-                  </p>
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-secondary/25 px-4 py-3 text-sm text-muted-foreground">
+              <div className="rounded-3xl border border-dashed border-border/70 bg-secondary/25 px-4 py-3 text-sm text-muted-foreground">
                 Задание закрыто. Если ответ был отправлен раньше, он останется в истории выше.
               </div>
             )}
@@ -208,7 +231,7 @@ export default function TasksPage() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
             <h1 className="text-4xl font-bold text-blue-900">Задания</h1>
             <p className="max-w-3xl text-blue-600/80">
-              Здесь преподаватель публикует задания. Ответ можно отправить ссылкой на документ, мем, отчёт или кратким комментарием.
+              Преподаватель публикует задания здесь. В ответ можно отправить ссылку, текст с нормальным оформлением или оба варианта сразу.
             </p>
           </motion.div>
 

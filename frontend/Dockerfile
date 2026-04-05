@@ -22,6 +22,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# The project may not include a public/ directory yet, but the runtime
+# image still expects that path to exist for the final COPY step.
+RUN mkdir -p /app/public
+
 # Build the application
 RUN npm run build
 

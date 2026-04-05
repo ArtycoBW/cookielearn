@@ -7,7 +7,7 @@ export default function AdminLeaderboardPage() {
   return (
     <>
       <Navigation />
-      <LeaderboardView title="Лидерборд" description="Администратор видит полный рейтинг студентов по печенькам." />
+      <LeaderboardView title="Лидерборд" description="Рейтинг строится по общему заработку, а уровень показывает совокупную активность студента." />
     </>
   )
 }

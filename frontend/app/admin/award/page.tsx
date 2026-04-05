@@ -18,6 +18,7 @@ import {
   useAdminTransactionHistory,
   useAwardCookies,
 } from '@/lib/queries'
+import { badgeIconOptions } from '@/lib/player-progress'
 import { formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -50,6 +51,8 @@ export default function AdminAwardPage() {
   const [amount, setAmount] = useState(1)
   const [reason, setReason] = useState('')
   const [category, setCategory] = useState('manual')
+  const [badgeIcon, setBadgeIcon] = useState('')
+  const [badgeTitle, setBadgeTitle] = useState('')
 
   const [historySearch, setHistorySearch] = useState('')
   const [historyMode, setHistoryMode] = useState<'all' | 'income' | 'expense'>('all')
@@ -115,11 +118,20 @@ export default function AdminAwardPage() {
     event.preventDefault()
 
     try {
-      await awardCookies.mutateAsync({ user_id: userId, amount, reason, category })
+      await awardCookies.mutateAsync({
+        user_id: userId,
+        amount,
+        reason,
+        category,
+        badge_icon: badgeIcon || undefined,
+        badge_title: badgeTitle.trim() || undefined,
+      })
       toast.success('Операция сохранена')
       setReason('')
       setAmount(1)
       setUserId('')
+      setBadgeIcon('')
+      setBadgeTitle('')
     } catch (error: any) {
       toast.error(error.message || 'Не удалось создать операцию')
     }
@@ -235,7 +247,41 @@ export default function AdminAwardPage() {
                       />
                     </div>
 
-                    <Button type="submit" isLoading={awardCookies.isPending} disabled={!userId || !selectedGroup}>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="badge-icon">Иконка бейджа</Label>
+                        <Select value={badgeIcon || 'none'} onValueChange={(value) => setBadgeIcon(value === 'none' ? '' : value)}>
+                          <SelectTrigger id="badge-icon">
+                            <SelectValue placeholder="Без бейджа" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Без бейджа</SelectItem>
+                            {badgeIconOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.value} {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="badge-title">Название бейджа</Label>
+                        <Input
+                          id="badge-title"
+                          value={badgeTitle}
+                          onChange={(event) => setBadgeTitle(event.target.value)}
+                          placeholder="Например: За активность"
+                          disabled={!badgeIcon}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      isLoading={awardCookies.isPending}
+                      disabled={!userId || !selectedGroup || (Boolean(badgeIcon) && badgeTitle.trim().length === 0)}
+                    >
                       Сохранить операцию
                     </Button>
                   </form>
@@ -307,6 +353,12 @@ export default function AdminAwardPage() {
                                   </Badge>
                                 )}
                                 {item.user_group_name && <Badge>{item.user_group_name}</Badge>}
+                                {item.badge_icon && item.badge_title && (
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/75 px-2.5 py-1 text-xs text-card-foreground">
+                                    <span>{item.badge_icon}</span>
+                                    <span>{item.badge_title}</span>
+                                  </span>
+                                )}
                               </div>
 
                               <p className="text-sm text-card-foreground">{item.reason}</p>

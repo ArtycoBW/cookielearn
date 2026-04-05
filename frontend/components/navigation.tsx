@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -98,7 +98,7 @@ export function Navigation() {
   return (
     <>
       <nav className="theme-nav sticky top-0 z-50 hidden border-b shadow-lg md:block">
-        <div className="mx-auto flex h-16 w-full max-w-[1680px] items-center gap-4 px-4 xl:px-6">
+        <div className="mx-auto grid min-h-[82px] w-full max-w-[1780px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 xl:px-6">
           <Link href={logoHref} className="group flex shrink-0 items-center gap-3">
             <motion.span whileHover={{ rotate: 18, scale: 1.08 }} className="text-3xl">
               🍪
@@ -106,41 +106,32 @@ export function Navigation() {
             <span className="text-xl font-bold text-white transition-colors group-hover:text-white/90">CookieLearn</span>
           </Link>
 
-          <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex min-w-max items-center gap-1 pr-1">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = isActiveItem(item.href)
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = isActiveItem(item.href)
 
-                return (
-                  <Link key={item.href} href={item.href} className="shrink-0">
-                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="relative">
-                      <div
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all xl:px-4 ${
-                          isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="whitespace-nowrap font-medium">{item.label}</span>
-                      </div>
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeNavItem"
-                          className="absolute -bottom-[11px] left-3 right-3 h-1 rounded-t-full bg-white"
-                          transition={{ type: 'spring', stiffness: 500, damping: 34 }}
-                        />
-                      )}
-                    </motion.div>
-                  </Link>
-                )
-              })}
-            </div>
+              return (
+                <Link key={item.href} href={item.href} className="shrink-0">
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                    <div
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-all xl:px-4 ${
+                        isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="whitespace-nowrap font-medium">{item.label}</span>
+                    </div>
+                  </motion.div>
+                </Link>
+              )
+            })}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <div className="w-[148px]">
+          <div className="flex shrink-0 items-center gap-2 self-stretch">
+            <div className="w-[152px] self-center">
               <Select value={theme} onValueChange={(value: AppTheme) => setTheme(value)}>
-                <SelectTrigger className="nav-theme-trigger h-10">
+                <SelectTrigger className="nav-theme-trigger h-11">
                   <div className="flex items-center gap-2">
                     <Palette className="h-4 w-4" />
                     <SelectValue>{themeLabels[theme]}</SelectValue>
@@ -154,7 +145,7 @@ export function Navigation() {
               </Select>
             </div>
 
-            <div className="nav-balance-chip flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 backdrop-blur-sm">
+            <div className="nav-balance-chip flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 backdrop-blur-sm">
               <span className="text-sm font-medium text-white/80">Баланс:</span>
               <span className="text-2xl font-bold text-white">{profile?.balance ?? 0}</span>
               <span className="text-2xl">🍪</span>
@@ -170,7 +161,7 @@ export function Navigation() {
 
       <nav className="theme-nav sticky top-0 z-50 border-b shadow-lg md:hidden">
         <div className="px-4">
-          <div className="flex h-16 items-center justify-between gap-2">
+          <div className="flex h-[72px] items-center justify-between gap-2">
             <Link href={logoHref} className="flex min-w-0 items-center gap-2">
               <span className="text-2xl">🍪</span>
               <span className="truncate text-lg font-bold text-white">CookieLearn</span>
