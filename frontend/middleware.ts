@@ -48,6 +48,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith('/dashboard') ||
     path.startsWith('/profile') ||
     path.startsWith('/shop') ||
+    path.startsWith('/materials') ||
     path.startsWith('/history') ||
     path.startsWith('/leaderboard') ||
     path.startsWith('/my-certificates') ||

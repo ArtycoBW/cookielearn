@@ -5,6 +5,8 @@ import type {
   DailyBonusClaimResponse,
   BulkImportStudentsResponse,
   Certificate,
+  Material,
+  MaterialInput,
   ProfileSummary,
   LeaderboardEntry,
   PurchaseHistoryEntry,
@@ -25,6 +27,7 @@ export const queryKeys = {
   profileSummary: ['profile', 'summary'] as const,
   transactions: ['transactions'] as const,
   certificates: ['certificates'] as const,
+  materials: ['materials'] as const,
   purchases: ['purchases'] as const,
   leaderboard: ['leaderboard'] as const,
   shopCertificates: ['shop', 'certificates'] as const,
@@ -32,6 +35,7 @@ export const queryKeys = {
   adminStudents: ['admin', 'students'] as const,
   adminAccounts: ['admin', 'accounts'] as const,
   adminCertificates: ['admin', 'certificates'] as const,
+  adminMaterials: ['admin', 'materials'] as const,
   adminTasks: ['admin', 'tasks'] as const,
   adminTaskSubmissions: ['admin', 'task-submissions'] as const,
   adminTransactionHistory: ['admin', 'transaction-history'] as const,
@@ -60,6 +64,14 @@ export function useTransactions() {
   return useQuery({
     queryKey: queryKeys.transactions,
     queryFn: () => api.get<Transaction[]>('/api/me/transactions'),
+  })
+}
+
+export function useMaterials() {
+  return useQuery({
+    queryKey: queryKeys.materials,
+    queryFn: () => api.get<Material[]>('/api/materials'),
+    staleTime: 60_000,
   })
 }
 
@@ -278,6 +290,14 @@ export function useAdminCertificates() {
   })
 }
 
+export function useAdminMaterials() {
+  return useQuery({
+    queryKey: queryKeys.adminMaterials,
+    queryFn: () => api.get<Material[]>('/api/admin/materials'),
+    staleTime: 30_000,
+  })
+}
+
 export function useCreateCertificate() {
   const queryClient = useQueryClient()
 
@@ -310,6 +330,42 @@ export function useDeleteCertificate() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminCertificates })
       queryClient.invalidateQueries({ queryKey: queryKeys.shopCertificates })
+    },
+  })
+}
+
+export function useCreateMaterial() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: MaterialInput) => api.post('/api/admin/materials', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminMaterials })
+      queryClient.invalidateQueries({ queryKey: queryKeys.materials })
+    },
+  })
+}
+
+export function useUpdateMaterial() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: Material) => api.put(`/api/admin/materials/${payload.id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminMaterials })
+      queryClient.invalidateQueries({ queryKey: queryKeys.materials })
+    },
+  })
+}
+
+export function useDeleteMaterial() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/materials/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminMaterials })
+      queryClient.invalidateQueries({ queryKey: queryKeys.materials })
     },
   })
 }

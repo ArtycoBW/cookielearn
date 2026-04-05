@@ -14,6 +14,7 @@ type StudentService struct {
 	txRepo             *repository.TransactionRepository
 	purchRepo          *repository.PurchaseRepository
 	bonusRepo          *repository.DailyBonusRepository
+	materialRepo       *repository.MaterialRepository
 	surveyRepo         *repository.SurveyRepository
 	taskRepo           *repository.TaskRepository
 	taskSubmissionRepo *repository.TaskSubmissionRepository
@@ -24,6 +25,7 @@ func NewStudentService(
 	txRepo *repository.TransactionRepository,
 	purchRepo *repository.PurchaseRepository,
 	bonusRepo *repository.DailyBonusRepository,
+	materialRepo *repository.MaterialRepository,
 	surveyRepo *repository.SurveyRepository,
 	taskRepo *repository.TaskRepository,
 	taskSubmissionRepo *repository.TaskSubmissionRepository,
@@ -33,6 +35,7 @@ func NewStudentService(
 		txRepo:             txRepo,
 		purchRepo:          purchRepo,
 		bonusRepo:          bonusRepo,
+		materialRepo:       materialRepo,
 		surveyRepo:         surveyRepo,
 		taskRepo:           taskRepo,
 		taskSubmissionRepo: taskSubmissionRepo,
@@ -237,6 +240,10 @@ func (s *StudentService) GetTasks(ctx context.Context, userID string) ([]*model.
 	}
 
 	return s.taskRepo.GetForUser(ctx, userID)
+}
+
+func (s *StudentService) GetMaterials(ctx context.Context) ([]*model.Material, error) {
+	return s.materialRepo.GetAll(ctx, false)
 }
 
 func (s *StudentService) SubmitTask(ctx context.Context, userID, taskID string, responseText, responseURL *string) (*model.TaskSubmission, error) {

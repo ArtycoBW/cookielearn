@@ -301,6 +301,73 @@ func (h *AdminHandler) DeleteCertificate(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+func (h *AdminHandler) GetMaterials(w http.ResponseWriter, r *http.Request) {
+	materials, err := h.service.GetMaterials(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения материалов")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, materials)
+}
+
+func (h *AdminHandler) CreateMaterial(w http.ResponseWriter, r *http.Request) {
+	adminID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "пользователь не авторизован")
+		return
+	}
+
+	var material model.Material
+	if err := json.NewDecoder(r.Body).Decode(&material); err != nil {
+		respondError(w, http.StatusBadRequest, "неверный формат запроса")
+		return
+	}
+
+	if err := h.service.CreateMaterial(r.Context(), &material, adminID); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, material)
+}
+
+func (h *AdminHandler) UpdateMaterial(w http.ResponseWriter, r *http.Request) {
+	materialID := chi.URLParam(r, "id")
+
+	var material model.Material
+	if err := json.NewDecoder(r.Body).Decode(&material); err != nil {
+		respondError(w, http.StatusBadRequest, "неверный формат запроса")
+		return
+	}
+	material.ID = materialID
+
+	if err := h.service.UpdateMaterial(r.Context(), &material); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"success":  true,
+		"material": material,
+		"message":  "Материал обновлён",
+	})
+}
+
+func (h *AdminHandler) DeleteMaterial(w http.ResponseWriter, r *http.Request) {
+	materialID := chi.URLParam(r, "id")
+
+	if err := h.service.DeleteMaterial(r.Context(), materialID); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"message": "Материал удалён",
+	})
+}
+
 func (h *AdminHandler) GetTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.service.GetTasks(r.Context())
 	if err != nil {

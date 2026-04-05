@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"strings"
 	"unicode"
 
@@ -30,6 +31,7 @@ type AdminService struct {
 	profileRepo        *repository.ProfileRepository
 	txRepo             *repository.TransactionRepository
 	certRepo           *repository.CertificateRepository
+	materialRepo       *repository.MaterialRepository
 	taskRepo           *repository.TaskRepository
 	taskSubmissionRepo *repository.TaskSubmissionRepository
 	purchaseRepo       *repository.PurchaseRepository
@@ -44,6 +46,7 @@ func NewAdminService(
 	profileRepo *repository.ProfileRepository,
 	txRepo *repository.TransactionRepository,
 	certRepo *repository.CertificateRepository,
+	materialRepo *repository.MaterialRepository,
 	taskRepo *repository.TaskRepository,
 	taskSubmissionRepo *repository.TaskSubmissionRepository,
 	purchaseRepo *repository.PurchaseRepository,
@@ -61,6 +64,7 @@ func NewAdminService(
 		profileRepo:        profileRepo,
 		txRepo:             txRepo,
 		certRepo:           certRepo,
+		materialRepo:       materialRepo,
 		taskRepo:           taskRepo,
 		taskSubmissionRepo: taskSubmissionRepo,
 		purchaseRepo:       purchaseRepo,
@@ -279,6 +283,10 @@ func (s *AdminService) GetCertificates(ctx context.Context) ([]*model.Certificat
 	return s.certRepo.GetAll(ctx, false)
 }
 
+func (s *AdminService) GetMaterials(ctx context.Context) ([]*model.Material, error) {
+	return s.materialRepo.GetAll(ctx, true)
+}
+
 func (s *AdminService) CreateCertificate(ctx context.Context, certificate *model.Certificate) error {
 	if strings.TrimSpace(certificate.Title) == "" || certificate.BasePrice <= 0 || certificate.CurrentPrice <= 0 {
 		return fmt.Errorf("title, base_price и current_price обязательны")
@@ -309,6 +317,34 @@ func (s *AdminService) DeleteCertificate(ctx context.Context, id string) error {
 	}
 
 	return s.certRepo.Delete(ctx, id)
+}
+
+func (s *AdminService) CreateMaterial(ctx context.Context, material *model.Material, adminID string) error {
+	if err := normalizeMaterial(material); err != nil {
+		return err
+	}
+
+	material.CreatedBy = &adminID
+	return s.materialRepo.Create(ctx, material)
+}
+
+func (s *AdminService) UpdateMaterial(ctx context.Context, material *model.Material) error {
+	if strings.TrimSpace(material.ID) == "" {
+		return fmt.Errorf("id обязателен")
+	}
+	if err := normalizeMaterial(material); err != nil {
+		return err
+	}
+
+	return s.materialRepo.Update(ctx, material)
+}
+
+func (s *AdminService) DeleteMaterial(ctx context.Context, id string) error {
+	if strings.TrimSpace(id) == "" {
+		return fmt.Errorf("id обязателен")
+	}
+
+	return s.materialRepo.Delete(ctx, id)
 }
 
 func (s *AdminService) GetTasks(ctx context.Context) ([]*model.Task, error) {
@@ -731,4 +767,73 @@ func normalizeCertificateQuantities(certificate *model.Certificate) error {
 	}
 
 	return nil
+}
+
+func normalizeMaterial(material *model.Material) error {
+	material.Title = strings.TrimSpace(material.Title)
+	material.Category = strings.TrimSpace(material.Category)
+	material.Format = strings.TrimSpace(material.Format)
+	material.URL = strings.TrimSpace(material.URL)
+	material.StorageBucket = normalizeOptionalText(material.StorageBucket)
+	material.StoragePath = normalizeOptionalText(material.StoragePath)
+	material.FileName = normalizeOptionalText(material.FileName)
+	material.MimeType = normalizeOptionalText(material.MimeType)
+
+	if material.Title == "" || material.URL == "" {
+		return fmt.Errorf("title и url обязательны")
+	}
+
+	if material.Category == "" {
+		material.Category = "Общее"
+	}
+	if material.Format == "" {
+		material.Format = "document"
+	}
+	if !isValidMaterialURL(material.URL) {
+		return fmt.Errorf("url должен быть корректной ссылкой http или https")
+	}
+
+	if material.StoragePath == nil {
+		material.StorageBucket = nil
+		material.FileName = nil
+		material.MimeType = nil
+		material.FileSize = nil
+	} else {
+		if material.StorageBucket == nil {
+			defaultBucket := "materials"
+			material.StorageBucket = &defaultBucket
+		}
+		if material.FileName == nil {
+			return fmt.Errorf("file_name обязателен для загруженного файла")
+		}
+		if material.FileSize != nil && *material.FileSize <= 0 {
+			return fmt.Errorf("file_size должен быть больше 0")
+		}
+	}
+
+	if material.Description != nil {
+		description := strings.TrimSpace(*material.Description)
+		if description == "" {
+			material.Description = nil
+		} else {
+			material.Description = &description
+		}
+	}
+
+	if material.EstimatedMinutes != nil {
+		if *material.EstimatedMinutes <= 0 {
+			return fmt.Errorf("estimated_minutes должен быть больше 0")
+		}
+	}
+
+	return nil
+}
+
+func isValidMaterialURL(raw string) bool {
+	parsed, err := url.ParseRequestURI(raw)
+	if err != nil {
+		return false
+	}
+
+	return parsed.Scheme == "http" || parsed.Scheme == "https"
 }

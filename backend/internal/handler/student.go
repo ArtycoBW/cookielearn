@@ -224,6 +224,16 @@ func (h *StudentHandler) GetMyTasks(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, tasks)
 }
 
+func (h *StudentHandler) GetMaterials(w http.ResponseWriter, r *http.Request) {
+	materials, err := h.service.GetMaterials(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка получения материалов")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, materials)
+}
+
 func (h *StudentHandler) SubmitTask(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

@@ -5,12 +5,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Award,
   BarChart3,
+  BookOpen,
   ClipboardList,
   FileText,
   Gift,
-  History,
   Home,
   LogOut,
   Menu,
@@ -19,30 +18,29 @@ import {
   ShoppingBag,
   Trophy,
   Users,
-  UserCircle2,
   X,
   type LucideIcon,
 } from 'lucide-react'
-import { useProfile } from '@/lib/queries'
-import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTheme, type AppTheme } from '@/components/theme-provider'
+import { studentHubRouteAliases } from '@/lib/student-hub'
+import { useProfile } from '@/lib/queries'
+import { createClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 type NavItem = {
   href: string
   label: string
   icon: LucideIcon
+  matchPaths?: string[]
 }
 
 const studentNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Дашборд', icon: Home },
-  { href: '/profile', label: 'Профиль', icon: UserCircle2 },
+  { href: '/dashboard', label: 'Кабинет', icon: Home, matchPaths: studentHubRouteAliases },
   { href: '/shop', label: 'Магазин', icon: ShoppingBag },
-  { href: '/my-certificates', label: 'Сертификаты', icon: Award },
+  { href: '/materials', label: 'Материалы', icon: BookOpen },
   { href: '/tasks', label: 'Задания', icon: ClipboardList },
-  { href: '/history', label: 'История', icon: History },
   { href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
   { href: '/survey', label: 'Анкета', icon: FileText },
 ]
@@ -54,6 +52,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/students', label: 'Студенты', icon: Users },
   { href: '/admin/award', label: 'Начисления', icon: Gift },
   { href: '/admin/certificates', label: 'Сертификаты', icon: Shield },
+  { href: '/admin/materials', label: 'Материалы', icon: BookOpen },
   { href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
   { href: '/admin/surveys', label: 'Анкеты', icon: FileText },
 ]
@@ -95,7 +94,10 @@ export function Navigation() {
     }
   }
 
-  const isActiveItem = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const isActiveItem = (item: NavItem) => {
+    const pathsToMatch = item.matchPaths?.length ? item.matchPaths : [item.href]
+    return pathsToMatch.some((href) => pathname === href || pathname.startsWith(`${href}/`))
+  }
 
   return (
     <>
@@ -111,7 +113,7 @@ export function Navigation() {
           <div className="flex min-w-0 flex-wrap items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = isActiveItem(item.href)
+              const isActive = isActiveItem(item)
 
               return (
                 <Link key={item.href} href={item.href} className="shrink-0">
@@ -213,7 +215,7 @@ export function Navigation() {
 
                 {navItems.map((item) => {
                   const Icon = item.icon
-                  const isActive = isActiveItem(item.href)
+                  const isActive = isActiveItem(item)
 
                   return (
                     <Link key={item.href} href={item.href}>

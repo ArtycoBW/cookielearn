@@ -80,6 +80,28 @@ export interface Certificate {
   updated_at: string
 }
 
+export interface Material {
+  id: string
+  title: string
+  description?: string | null
+  category: string
+  format: string
+  url: string
+  storage_bucket?: string | null
+  storage_path?: string | null
+  file_name?: string | null
+  mime_type?: string | null
+  file_size?: number | null
+  estimated_minutes?: number | null
+  is_published: boolean
+  is_featured: boolean
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type MaterialInput = Omit<Material, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+
 export interface Purchase {
   id: string
   user_id: string

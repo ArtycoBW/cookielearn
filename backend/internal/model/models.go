@@ -84,6 +84,26 @@ type Certificate struct {
 	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
+type Material struct {
+	ID               string     `json:"id"`
+	Title            string     `json:"title"`
+	Description      *string    `json:"description"`
+	Category         string     `json:"category"`
+	Format           string     `json:"format"`
+	URL              string     `json:"url"`
+	StorageBucket    *string    `json:"storage_bucket,omitempty"`
+	StoragePath      *string    `json:"storage_path,omitempty"`
+	FileName         *string    `json:"file_name,omitempty"`
+	MimeType         *string    `json:"mime_type,omitempty"`
+	FileSize         *int64     `json:"file_size,omitempty"`
+	EstimatedMinutes *int       `json:"estimated_minutes"`
+	IsPublished      bool       `json:"is_published"`
+	IsFeatured       bool       `json:"is_featured"`
+	CreatedBy        *string    `json:"created_by"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+}
+
 type Purchase struct {
 	ID            string     `json:"id"`
 	UserID        string     `json:"user_id"`

@@ -39,6 +39,7 @@ func main() {
 	profileRepo := repository.NewProfileRepository(db)
 	txRepo := repository.NewTransactionRepository(db)
 	certRepo := repository.NewCertificateRepository(db)
+	materialRepo := repository.NewMaterialRepository(db)
 	purchRepo := repository.NewPurchaseRepository(db)
 	bonusRepo := repository.NewDailyBonusRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
@@ -52,12 +53,13 @@ func main() {
 	studentEmailDomain := os.Getenv("SUPABASE_STUDENT_EMAIL_DOMAIN")
 	authAdmin := service.NewSupabaseAuthAdmin(supabaseURL, supabaseServiceRole)
 
-	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo, surveyRepo, taskRepo, taskSubmissionRepo)
+	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo, materialRepo, surveyRepo, taskRepo, taskSubmissionRepo)
 	shopService := service.NewShopService(certRepo, purchRepo, txRepo, db)
 	adminService := service.NewAdminService(
 		profileRepo,
 		txRepo,
 		certRepo,
+		materialRepo,
 		taskRepo,
 		taskSubmissionRepo,
 		purchRepo,
@@ -110,6 +112,7 @@ func main() {
 		r.Post("/me/daily-bonus", studentHandler.ClaimDailyBonus)
 		r.Get("/me/survey", studentHandler.GetMySurvey)
 		r.Post("/me/survey", studentHandler.SubmitSurvey)
+		r.Get("/materials", studentHandler.GetMaterials)
 		r.Get("/me/tasks", studentHandler.GetMyTasks)
 		r.Post("/me/tasks/{id}/submit", studentHandler.SubmitTask)
 
@@ -140,6 +143,11 @@ func main() {
 			r.Post("/certificates", adminHandler.CreateCertificate)
 			r.Put("/certificates/{id}", adminHandler.UpdateCertificate)
 			r.Delete("/certificates/{id}", adminHandler.DeleteCertificate)
+
+			r.Get("/materials", adminHandler.GetMaterials)
+			r.Post("/materials", adminHandler.CreateMaterial)
+			r.Put("/materials/{id}", adminHandler.UpdateMaterial)
+			r.Delete("/materials/{id}", adminHandler.DeleteMaterial)
 
 			r.Get("/tasks", adminHandler.GetTasks)
 			r.Post("/tasks", adminHandler.CreateTask)
