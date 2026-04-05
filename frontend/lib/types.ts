@@ -6,6 +6,12 @@ export interface BadgeAward {
   created_at: string
 }
 
+export interface BadgePreview {
+  icon: string
+  title: string
+  reason: string
+}
+
 export interface Profile {
   id: string
   full_name: string
@@ -33,7 +39,7 @@ export interface Transaction {
   user_id: string
   amount: number
   reason: string
-  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | null
+  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | 'streak_bonus' | null
   badge_icon?: string | null
   badge_title?: string | null
   created_by?: string | null
@@ -48,7 +54,7 @@ export interface TransactionHistoryEntry {
   user_login?: string | null
   amount: number
   reason: string
-  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | null
+  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | 'streak_bonus' | null
   badge_icon?: string | null
   badge_title?: string | null
   created_by?: string | null
@@ -106,6 +112,70 @@ export interface DailyBonus {
   user_id: string
   awarded_at: string
   created_at: string
+}
+
+export interface StreakSummary {
+  current: number
+  longest: number
+  last_claimed_at?: string | null
+  can_claim_today: boolean
+  next_milestone: number
+  days_to_next_milestone: number
+}
+
+export interface ActivityHeatmapDay {
+  date: string
+  count: number
+  intensity: number
+  is_today: boolean
+}
+
+export interface ProfileRecentActivity {
+  id: string
+  type: 'transaction' | 'task_submission' | string
+  title: string
+  subtitle?: string | null
+  amount?: number | null
+  created_at: string
+}
+
+export interface FavoriteTaskCategory {
+  value: string
+  label: string
+  submission_count: number
+}
+
+export interface ProfileSummary {
+  profile: Profile
+  rank: number
+  streak: StreakSummary
+  activity_days: ActivityHeatmapDay[]
+  active_days_count: number
+  recent_activities: ProfileRecentActivity[]
+  recent_certificates: Purchase[]
+  favorite_task_category?: FavoriteTaskCategory | null
+}
+
+export interface DailyBonusClaimResult {
+  bonus: DailyBonus
+  base_reward: number
+  streak_reward: number
+  total_reward: number
+  streak: StreakSummary
+  badge?: BadgePreview | null
+}
+
+export interface DailyBonusClaimResponse {
+  success: boolean
+  claim: DailyBonusClaimResult
+  message: string
+}
+
+export interface RandomBonusResponse {
+  success: boolean
+  cost: number
+  reward: number
+  message: string
 }
 
 export interface LeaderboardEntry {

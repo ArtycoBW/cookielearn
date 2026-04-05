@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   Trophy,
   Users,
+  UserCircle2,
   X,
   type LucideIcon,
 } from 'lucide-react'
@@ -37,6 +38,7 @@ type NavItem = {
 
 const studentNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Дашборд', icon: Home },
+  { href: '/profile', label: 'Профиль', icon: UserCircle2 },
   { href: '/shop', label: 'Магазин', icon: ShoppingBag },
   { href: '/my-certificates', label: 'Сертификаты', icon: Award },
   { href: '/tasks', label: 'Задания', icon: ClipboardList },

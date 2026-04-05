@@ -46,11 +46,14 @@ export async function middleware(request: NextRequest) {
   const isAuthPath = path === '/login'
   const isProtectedPath =
     path.startsWith('/dashboard') ||
+    path.startsWith('/profile') ||
     path.startsWith('/shop') ||
     path.startsWith('/history') ||
     path.startsWith('/leaderboard') ||
     path.startsWith('/my-certificates') ||
     path.startsWith('/certificates') ||
+    path.startsWith('/tasks') ||
+    path.startsWith('/survey') ||
     path.startsWith('/admin')
 
   if (!user && isProtectedPath) {

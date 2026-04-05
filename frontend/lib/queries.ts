@@ -2,12 +2,15 @@
 import { api } from './api'
 import type {
   AccountCredential,
+  DailyBonusClaimResponse,
   BulkImportStudentsResponse,
   Certificate,
+  ProfileSummary,
   LeaderboardEntry,
   PurchaseHistoryEntry,
   Profile,
   Purchase,
+  RandomBonusResponse,
   RegisterStudentResponse,
   Stats,
   SurveySubmission,
@@ -19,6 +22,7 @@ import type {
 
 export const queryKeys = {
   profile: ['profile'] as const,
+  profileSummary: ['profile', 'summary'] as const,
   transactions: ['transactions'] as const,
   certificates: ['certificates'] as const,
   purchases: ['purchases'] as const,
@@ -42,6 +46,13 @@ export function useProfile() {
   return useQuery({
     queryKey: queryKeys.profile,
     queryFn: () => api.get<Profile>('/api/me'),
+  })
+}
+
+export function useProfileSummary() {
+  return useQuery({
+    queryKey: queryKeys.profileSummary,
+    queryFn: () => api.get<ProfileSummary>('/api/me/profile-summary'),
   })
 }
 
@@ -89,9 +100,23 @@ export function useClaimDailyBonus() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => api.post('/api/me/daily-bonus'),
+    mutationFn: () => api.post<DailyBonusClaimResponse>('/api/me/daily-bonus'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+    },
+  })
+}
+
+export function useBuyRandomBonus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload?: { cost?: number }) => api.post<RandomBonusResponse>('/api/shop/random-bonus/buy', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
     },
   })
@@ -104,6 +129,7 @@ export function useBuyCertificate() {
     mutationFn: (certificateId: string) => api.post(`/api/shop/certificates/${certificateId}/buy`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases })
       queryClient.invalidateQueries({ queryKey: queryKeys.shopCertificates })
@@ -128,6 +154,7 @@ export function useUseCertificate() {
     mutationFn: (certificateId: string) => api.post(`/api/me/certificates/${certificateId}/use`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
     },
@@ -196,6 +223,7 @@ export function useUpdateStudent() {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminAccounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
     },
   })
@@ -234,6 +262,7 @@ export function useAwardCookies() {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStudents })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
@@ -369,6 +398,7 @@ export function useRewardTaskSubmission() {
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
     },
@@ -422,6 +452,7 @@ export function useSubmitTask() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.myTasks })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
     },
   })
 }
@@ -434,6 +465,7 @@ export function useSubmitSurvey() {
       api.post('/api/me/survey', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.mySurvey })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
     },
   })
 }

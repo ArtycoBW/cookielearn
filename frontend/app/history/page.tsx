@@ -27,6 +27,8 @@ export default function HistoryPage() {
         return 'danger'
       case 'random_bonus':
         return 'warning'
+      case 'streak_bonus':
+        return 'warning'
       case 'manual':
       case 'task_reward':
       default:
@@ -42,10 +44,14 @@ export default function HistoryPage() {
         return 'Покупка'
       case 'random_bonus':
         return 'Случайный бонус'
+      case 'streak_bonus':
+        return 'Бонус за серию'
       case 'manual':
         return 'Начисление'
       case 'task_reward':
         return 'Награда за задание'
+      case 'survey_reward':
+        return 'Награда за анкету'
       default:
         return 'Другое'
     }
@@ -98,8 +104,10 @@ export default function HistoryPage() {
                       <SelectItem value="daily_bonus">Ежедневный бонус</SelectItem>
                       <SelectItem value="purchase">Покупки</SelectItem>
                       <SelectItem value="random_bonus">Случайный бонус</SelectItem>
+                      <SelectItem value="streak_bonus">Бонус за серию</SelectItem>
                       <SelectItem value="manual">Начисления</SelectItem>
                       <SelectItem value="task_reward">Награды за задания</SelectItem>
+                      <SelectItem value="survey_reward">Награды за анкету</SelectItem>
                     </SelectContent>
                   </Select>
 
