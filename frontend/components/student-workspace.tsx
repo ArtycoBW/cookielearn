@@ -83,6 +83,8 @@ function resolveActivitySubtitle(value?: string | null) {
       return 'Награда за задание'
     case 'survey_reward':
       return 'Награда за анкету'
+    case 'self_belief_quiz':
+      return 'Верю в себя'
     default:
       return resolveTaskTypeLabel(value)
   }
@@ -130,6 +132,8 @@ function getTransactionCategoryLabel(category?: string | null) {
       return 'Награда за задание'
     case 'survey_reward':
       return 'Награда за анкету'
+    case 'self_belief_quiz':
+      return 'Верю в себя'
     default:
       return 'Другое'
   }
@@ -143,6 +147,7 @@ function getTransactionBadgeVariant(category?: string | null): 'default' | 'succ
       return 'danger'
     case 'random_bonus':
     case 'streak_bonus':
+    case 'self_belief_quiz':
       return 'warning'
     default:
       return 'default'
@@ -288,9 +293,6 @@ export function StudentWorkspace({ activeTab }: { activeTab: StudentHubTab }) {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground">{summary.profile.full_name}</h1>
-                <p className="max-w-3xl text-base leading-7 text-muted-foreground">
-                  В одном месте собраны обзор прогресса, профиль, сертификаты и история активности. Так навигация стала чище, а вся важная информация теперь рядом.
-                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -851,6 +853,7 @@ export function StudentWorkspace({ activeTab }: { activeTab: StudentHubTab }) {
                       <SelectItem value="purchase">Покупки</SelectItem>
                       <SelectItem value="random_bonus">Случайный бонус</SelectItem>
                       <SelectItem value="streak_bonus">Бонус за серию</SelectItem>
+                      <SelectItem value="self_belief_quiz">Верю в себя</SelectItem>
                       <SelectItem value="manual">Начисления</SelectItem>
                       <SelectItem value="task_reward">Награды за задания</SelectItem>
                       <SelectItem value="survey_reward">Награды за анкету</SelectItem>

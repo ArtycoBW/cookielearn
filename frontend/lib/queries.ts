@@ -1,4 +1,4 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
 import type {
   AccountCredential,
@@ -14,6 +14,17 @@ import type {
   Purchase,
   RandomBonusResponse,
   RegisterStudentResponse,
+  SelfBeliefAnswerResult,
+  SelfBeliefOverview,
+  SelfBeliefQuiz,
+  SelfBeliefQuizAttemptResult,
+  SelfBeliefQuizInput,
+  SelfBeliefQuizOverview,
+  SelfBeliefQuestion,
+  SelfBeliefQuestionInput,
+  SelfBeliefQuestionResponse,
+  SelfBeliefQuizStartResult,
+  SelfBeliefQuizAnswerSubmission,
   Stats,
   SurveySubmission,
   Task,
@@ -43,6 +54,12 @@ export const queryKeys = {
   adminStats: ['admin', 'stats'] as const,
   myTasks: ['my', 'tasks'] as const,
   mySurvey: ['my', 'survey'] as const,
+  selfBeliefOverview: ['self-belief', 'overview'] as const,
+  selfBeliefQuizOverview: ['self-belief', 'quiz-overview'] as const,
+  selfBeliefQuizzes: ['self-belief', 'quizzes'] as const,
+  selfBeliefQuestion: (wager: number, category: string, seed: number) => ['self-belief', 'question', wager, category, seed] as const,
+  adminSelfBeliefQuestions: ['admin', 'self-belief', 'questions'] as const,
+  adminSelfBeliefQuizzes: ['admin', 'self-belief', 'quizzes'] as const,
   adminSurveys: ['admin', 'surveys'] as const,
 }
 
@@ -72,6 +89,60 @@ export function useMaterials() {
     queryKey: queryKeys.materials,
     queryFn: () => api.get<Material[]>('/api/materials'),
     staleTime: 60_000,
+  })
+}
+
+export function useSelfBeliefOverview() {
+  return useQuery({
+    queryKey: queryKeys.selfBeliefOverview,
+    queryFn: () => api.get<SelfBeliefOverview>('/api/me/self-belief'),
+  })
+}
+
+export function useSelfBeliefQuizOverview() {
+  return useQuery({
+    queryKey: queryKeys.selfBeliefQuizOverview,
+    queryFn: async (): Promise<SelfBeliefQuizOverview> => {
+      const data = await api.get<SelfBeliefQuizOverview>('/api/me/self-belief/overview')
+      return {
+        stats: data?.stats ?? {
+          matches_played: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          net_reward: 0,
+          win_rate: 0,
+        },
+        recent_attempts: Array.isArray(data?.recent_attempts) ? data.recent_attempts : [],
+        completed_quiz_ids: Array.isArray(data?.completed_quiz_ids) ? data.completed_quiz_ids : [],
+      }
+    },
+  })
+}
+
+export function useSelfBeliefQuizzes() {
+  return useQuery({
+    queryKey: queryKeys.selfBeliefQuizzes,
+    queryFn: async () => {
+      const data = await api.get<SelfBeliefQuiz[]>('/api/me/self-belief/quizzes')
+      return Array.isArray(data) ? data : []
+    },
+    staleTime: 30_000,
+  })
+}
+
+export function useSelfBeliefQuestion(wager: number, category: string | undefined, seed: number, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.selfBeliefQuestion(wager, category || 'all', seed),
+    queryFn: () => {
+      const params = new URLSearchParams({ wager: String(wager) })
+      if (category) {
+        params.set('category', category)
+      }
+      return api.get<SelfBeliefQuestionResponse>(`/api/me/self-belief/question?${params.toString()}`)
+    },
+    enabled: enabled && Number.isFinite(wager),
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -130,6 +201,62 @@ export function useBuyRandomBonus() {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile })
       queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+    },
+  })
+}
+
+export function useAnswerSelfBeliefQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { question_id: string; wager: number; selected_option: number }) =>
+      api.post<SelfBeliefAnswerResult>('/api/me/self-belief/answer', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefOverview })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+    },
+  })
+}
+
+export function useStartSelfBeliefQuiz() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (quizId: string) => api.post<SelfBeliefQuizStartResult>(`/api/me/self-belief/quizzes/${quizId}/start`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizOverview })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
+    },
+  })
+}
+
+export function useFinishSelfBeliefQuiz() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { attempt_id: string; answers: SelfBeliefQuizAnswerSubmission[] }) =>
+      api.post<SelfBeliefQuizAttemptResult>(`/api/me/self-belief/attempts/${payload.attempt_id}/finish`, {
+        answers: payload.answers,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileSummary })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizOverview })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTransactionHistory })
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminStats })
     },
   })
 }
@@ -298,6 +425,28 @@ export function useAdminMaterials() {
   })
 }
 
+export function useAdminSelfBeliefQuestions() {
+  return useQuery({
+    queryKey: queryKeys.adminSelfBeliefQuestions,
+    queryFn: async () => {
+      const data = await api.get<SelfBeliefQuestion[]>('/api/admin/self-belief/questions')
+      return Array.isArray(data) ? data : []
+    },
+    staleTime: 30_000,
+  })
+}
+
+export function useAdminSelfBeliefQuizzes() {
+  return useQuery({
+    queryKey: queryKeys.adminSelfBeliefQuizzes,
+    queryFn: async () => {
+      const data = await api.get<SelfBeliefQuiz[]>('/api/admin/self-belief/quizzes')
+      return Array.isArray(data) ? data : []
+    },
+    staleTime: 30_000,
+  })
+}
+
 export function useCreateCertificate() {
   const queryClient = useQueryClient()
 
@@ -366,6 +515,81 @@ export function useDeleteMaterial() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminMaterials })
       queryClient.invalidateQueries({ queryKey: queryKeys.materials })
+    },
+  })
+}
+
+export function useCreateSelfBeliefQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SelfBeliefQuestionInput) => api.post('/api/admin/self-belief/questions', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuestions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefOverview })
+    },
+  })
+}
+
+export function useUpdateSelfBeliefQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SelfBeliefQuestion) => api.put(`/api/admin/self-belief/questions/${payload.id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuestions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefOverview })
+    },
+  })
+}
+
+export function useDeleteSelfBeliefQuestion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/self-belief/questions/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuestions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefOverview })
+    },
+  })
+}
+
+export function useCreateSelfBeliefQuiz() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SelfBeliefQuizInput) => api.post<SelfBeliefQuiz>('/api/admin/self-belief/quizzes', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizOverview })
+    },
+  })
+}
+
+export function useUpdateSelfBeliefQuiz() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SelfBeliefQuiz) => api.put<SelfBeliefQuiz>(`/api/admin/self-belief/quizzes/${payload.id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizOverview })
+    },
+  })
+}
+
+export function useDeleteSelfBeliefQuiz() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/self-belief/quizzes/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSelfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizzes })
+      queryClient.invalidateQueries({ queryKey: queryKeys.selfBeliefQuizOverview })
     },
   })
 }
@@ -547,4 +771,3 @@ export function useRewardSurvey() {
     },
   })
 }
-

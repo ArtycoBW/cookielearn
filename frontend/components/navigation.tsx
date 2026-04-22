@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   BarChart3,
   BookOpen,
+  ChevronDown,
   ClipboardList,
   FileText,
   Gift,
@@ -16,51 +17,83 @@ import {
   Palette,
   Shield,
   ShoppingBag,
+  Sparkles,
   Trophy,
   Users,
   X,
   type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTheme, type AppTheme } from '@/components/theme-provider'
-import { studentHubRouteAliases } from '@/lib/student-hub'
 import { useProfile } from '@/lib/queries'
+import { studentHubRouteAliases } from '@/lib/student-hub'
 import { createClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-type NavItem = {
+type NavLinkItem = {
+  type: 'link'
   href: string
   label: string
   icon: LucideIcon
   matchPaths?: string[]
 }
 
+type NavGroupItem = {
+  type: 'group'
+  label: string
+  icon: LucideIcon
+  items: NavLinkItem[]
+}
+
+type NavItem = NavLinkItem | NavGroupItem
+
 const studentNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Кабинет', icon: Home, matchPaths: studentHubRouteAliases },
-  { href: '/shop', label: 'Магазин', icon: ShoppingBag },
-  { href: '/materials', label: 'Материалы', icon: BookOpen },
-  { href: '/tasks', label: 'Задания', icon: ClipboardList },
-  { href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
-  { href: '/survey', label: 'Анкета', icon: FileText },
+  { type: 'link', href: '/dashboard', label: 'Кабинет', icon: Home, matchPaths: studentHubRouteAliases },
+  { type: 'link', href: '/shop', label: 'Магазин', icon: ShoppingBag },
+  { type: 'link', href: '/materials', label: 'Материалы', icon: BookOpen },
+  { type: 'link', href: '/tasks', label: 'Задания', icon: ClipboardList },
+  { type: 'link', href: '/quiz', label: 'Викторина', icon: Sparkles },
+  { type: 'link', href: '/leaderboard', label: 'Лидерборд', icon: Trophy },
+  { type: 'link', href: '/survey', label: 'Анкета', icon: FileText },
 ]
 
 const adminNavItems: NavItem[] = [
-  { href: '/admin/stats', label: 'Статистика', icon: BarChart3 },
-  { href: '/admin/leaderboard', label: 'Лидерборд', icon: Trophy },
-  { href: '/shop', label: 'Магазин', icon: ShoppingBag },
-  { href: '/admin/students', label: 'Студенты', icon: Users },
-  { href: '/admin/award', label: 'Начисления', icon: Gift },
-  { href: '/admin/certificates', label: 'Сертификаты', icon: Shield },
-  { href: '/admin/materials', label: 'Материалы', icon: BookOpen },
-  { href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
-  { href: '/admin/surveys', label: 'Анкеты', icon: FileText },
+  { type: 'link', href: '/admin/stats', label: 'Статистика', icon: BarChart3 },
+  { type: 'link', href: '/admin/leaderboard', label: 'Лидерборд', icon: Trophy },
+  { type: 'link', href: '/shop', label: 'Магазин', icon: ShoppingBag },
+  {
+    type: 'group',
+    label: 'Студенты',
+    icon: Users,
+    items: [
+      { type: 'link', href: '/admin/students', label: 'База студентов', icon: Users },
+      { type: 'link', href: '/admin/award', label: 'Начисления', icon: Gift },
+    ],
+  },
+  {
+    type: 'group',
+    label: 'Контент',
+    icon: BookOpen,
+    items: [
+      { type: 'link', href: '/admin/certificates', label: 'Сертификаты', icon: Shield },
+      { type: 'link', href: '/admin/tasks', label: 'Задания', icon: ClipboardList },
+      { type: 'link', href: '/admin/materials', label: 'Материалы', icon: BookOpen },
+    ],
+  },
+  { type: 'link', href: '/admin/self-belief', label: 'Викторина', icon: Sparkles },
+  { type: 'link', href: '/admin/surveys', label: 'Анкеты', icon: FileText },
 ]
 
 const themeLabels: Record<AppTheme, string> = {
   ocean: 'Океан',
   mint: 'Мята',
   midnight: 'Ночь',
+}
+
+function isPathActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 export function Navigation() {
@@ -94,9 +127,83 @@ export function Navigation() {
     }
   }
 
-  const isActiveItem = (item: NavItem) => {
+  const isActiveItem = (item: NavItem): boolean => {
+    if (item.type === 'group') {
+      return item.items.some((child) => isActiveItem(child))
+    }
+
     const pathsToMatch = item.matchPaths?.length ? item.matchPaths : [item.href]
-    return pathsToMatch.some((href) => pathname === href || pathname.startsWith(`${href}/`))
+    return pathsToMatch.some((href) => isPathActive(pathname, href))
+  }
+
+  const renderLinkItem = (item: NavLinkItem) => {
+    const Icon = item.icon
+    const isActive = isActiveItem(item)
+
+    return (
+      <Link key={item.href} href={item.href} className="shrink-0">
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+          <div
+            className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-all xl:px-4 ${
+              isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="whitespace-nowrap font-medium">{item.label}</span>
+          </div>
+        </motion.div>
+      </Link>
+    )
+  }
+
+  const renderGroupItem = (item: NavGroupItem) => {
+    const Icon = item.icon
+    const isActive = isActiveItem(item)
+
+    return (
+      <Popover key={item.label}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-all xl:px-4 ${
+              isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="whitespace-nowrap font-medium">{item.label}</span>
+            <ChevronDown className="h-4 w-4 opacity-75" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          sideOffset={12}
+          className="w-[280px] rounded-[1.4rem] border border-border/70 bg-popover/95 p-2 shadow-[0_30px_70px_-36px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+        >
+          <div className="px-3 py-2">
+            <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{item.label}</div>
+          </div>
+          <div className="space-y-1">
+            {item.items.map((child) => {
+              const ChildIcon = child.icon
+              const isChildActive = isActiveItem(child)
+
+              return (
+                <Link key={child.href} href={child.href}>
+                  <div
+                    className={`flex items-center gap-3 rounded-[1rem] px-3 py-3 text-sm transition-all ${
+                      isChildActive ? 'bg-primary/10 text-card-foreground' : 'text-muted-foreground hover:bg-secondary/50 hover:text-card-foreground'
+                    }`}
+                  >
+                    <ChildIcon className="h-4 w-4" />
+                    <span className="font-medium">{child.label}</span>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    )
   }
 
   return (
@@ -111,25 +218,7 @@ export function Navigation() {
           </Link>
 
           <div className="flex min-w-0 flex-wrap items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = isActiveItem(item)
-
-              return (
-                <Link key={item.href} href={item.href} className="shrink-0">
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                    <div
-                      className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-all xl:px-4 ${
-                        isActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="whitespace-nowrap font-medium">{item.label}</span>
-                    </div>
-                  </motion.div>
-                </Link>
-              )
-            })}
+            {navItems.map((item) => (item.type === 'group' ? renderGroupItem(item) : renderLinkItem(item)))}
           </div>
 
           <div className="flex shrink-0 items-center gap-2 self-stretch">
@@ -187,7 +276,7 @@ export function Navigation() {
         </div>
 
         <AnimatePresence>
-          {mobileMenuOpen && (
+          {mobileMenuOpen ? (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -214,6 +303,43 @@ export function Navigation() {
                 </div>
 
                 {navItems.map((item) => {
+                  if (item.type === 'group') {
+                    const GroupIcon = item.icon
+                    const isGroupActive = isActiveItem(item)
+
+                    return (
+                      <div
+                        key={item.label}
+                        className={`rounded-xl p-2 transition-all ${isGroupActive ? 'bg-white/10' : 'bg-white/[0.04]'}`}
+                      >
+                        <div className="flex items-center gap-3 px-2 py-2 text-sm font-semibold text-white/85">
+                          <GroupIcon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </div>
+                        <div className="space-y-1">
+                          {item.items.map((child) => {
+                            const ChildIcon = child.icon
+                            const isChildActive = isActiveItem(child)
+
+                            return (
+                              <Link key={child.href} href={child.href}>
+                                <motion.div
+                                  whileTap={{ scale: 0.98 }}
+                                  className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
+                                    isChildActive ? 'nav-item-active shadow-lg' : 'nav-item-idle'
+                                  }`}
+                                >
+                                  <ChildIcon className="h-5 w-5" />
+                                  <span className="font-medium">{child.label}</span>
+                                </motion.div>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  }
+
                   const Icon = item.icon
                   const isActive = isActiveItem(item)
 
@@ -242,7 +368,7 @@ export function Navigation() {
                 </button>
               </div>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </nav>
     </>

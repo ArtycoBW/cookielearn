@@ -233,8 +233,15 @@ func (r *CertificateRepository) Update(ctx context.Context, c *model.Certificate
 }
 
 func (r *CertificateRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM certificates WHERE id = $1`
-	_, err := r.db.Pool.Exec(ctx, query, id)
+	var count int
+	if err := r.db.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM purchases WHERE certificate_id = $1`, id).Scan(&count); err != nil {
+		return fmt.Errorf("check certificate purchases: %w", err)
+	}
+	if count > 0 {
+		return fmt.Errorf("нельзя удалить сертификат: оформлено %d покупок — сначала удалите их вручную", count)
+	}
+
+	_, err := r.db.Pool.Exec(ctx, `DELETE FROM certificates WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("delete certificate: %w", err)
 	}

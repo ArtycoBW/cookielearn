@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cookielearn/backend/internal/model"
@@ -202,7 +203,7 @@ func heatmapIntensity(count, maxCount int) int {
 }
 
 func resolveTaskCategoryLabel(value string) string {
-	switch value {
+	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "feedback":
 		return "Замечания по материалам"
 	case "sql":

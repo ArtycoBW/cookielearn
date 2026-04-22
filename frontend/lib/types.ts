@@ -39,7 +39,16 @@ export interface Transaction {
   user_id: string
   amount: number
   reason: string
-  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | 'streak_bonus' | null
+  category?:
+    | 'daily_bonus'
+    | 'manual'
+    | 'purchase'
+    | 'random_bonus'
+    | 'task_reward'
+    | 'survey_reward'
+    | 'streak_bonus'
+    | 'self_belief_quiz'
+    | null
   badge_icon?: string | null
   badge_title?: string | null
   created_by?: string | null
@@ -54,7 +63,16 @@ export interface TransactionHistoryEntry {
   user_login?: string | null
   amount: number
   reason: string
-  category?: 'daily_bonus' | 'manual' | 'purchase' | 'random_bonus' | 'task_reward' | 'survey_reward' | 'streak_bonus' | null
+  category?:
+    | 'daily_bonus'
+    | 'manual'
+    | 'purchase'
+    | 'random_bonus'
+    | 'task_reward'
+    | 'survey_reward'
+    | 'streak_bonus'
+    | 'self_belief_quiz'
+    | null
   badge_icon?: string | null
   badge_title?: string | null
   created_by?: string | null
@@ -101,6 +119,194 @@ export interface Material {
 }
 
 export type MaterialInput = Omit<Material, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+
+export interface SelfBeliefQuestion {
+  id: string
+  category: string
+  wager: number
+  prompt: string
+  options: string[]
+  correct_option: number
+  explanation?: string | null
+  is_active: boolean
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SelfBeliefQuestionPublic {
+  id: string
+  category: string
+  wager: number
+  prompt: string
+  options: string[]
+}
+
+export interface SelfBeliefAttempt {
+  id: string
+  user_id: string
+  question_id: string
+  category: string
+  wager: number
+  selected_option: number
+  correct_option: number
+  prompt: string
+  options: string[]
+  is_correct: boolean
+  reward_delta: number
+  balance_after: number
+  explanation?: string | null
+  created_at: string
+}
+
+export interface SelfBeliefStats {
+  total_attempts: number
+  correct_attempts: number
+  net_reward: number
+  accuracy_percent: number
+}
+
+export interface SelfBeliefOverview {
+  stats: SelfBeliefStats
+  categories: string[]
+  recent_attempts: SelfBeliefAttempt[]
+}
+
+export interface SelfBeliefQuestionResponse {
+  question: SelfBeliefQuestionPublic | null
+  exhausted: boolean
+  message?: string
+}
+
+export interface SelfBeliefAnswerResult {
+  attempt: SelfBeliefAttempt
+  message: string
+}
+
+export type SelfBeliefQuestionInput = Omit<SelfBeliefQuestion, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+
+export interface SelfBeliefQuizQuestionLink {
+  question_id: string
+  position: number
+}
+
+export interface SelfBeliefQuiz {
+  id: string
+  title: string
+  description?: string | null
+  wager: number
+  time_limit_seconds: number
+  is_active: boolean
+  question_count: number
+  questions: SelfBeliefQuizQuestionLink[]
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SelfBeliefQuizPublicQuestion {
+  id: string
+  category: string
+  prompt: string
+  options: string[]
+  position: number
+  corgi_selected_option: number
+  corgi_reveal_after_ms: number
+}
+
+export interface SelfBeliefQuizPublic {
+  id: string
+  title: string
+  description?: string | null
+  wager: number
+  time_limit_seconds: number
+  question_count: number
+  questions: SelfBeliefQuizPublicQuestion[]
+}
+
+export interface SelfBeliefQuizStartResult {
+  attempt_id: string
+  quiz: SelfBeliefQuizPublic
+  entry_cost: number
+  balance_after_entry: number
+  started_at: string
+  message: string
+}
+
+export interface SelfBeliefQuizAnswerSubmission {
+  question_id: string
+  selected_option?: number | null
+  timed_out: boolean
+  response_ms: number
+}
+
+export interface SelfBeliefQuizQuestionResult {
+  question_id: string
+  position: number
+  category: string
+  prompt: string
+  options: string[]
+  correct_option: number
+  selected_option?: number | null
+  response_ms: number
+  timed_out: boolean
+  is_correct: boolean
+  corgi_selected_option: number
+  corgi_is_correct: boolean
+  explanation?: string | null
+  created_at: string
+}
+
+export interface SelfBeliefQuizAttemptSummary {
+  id: string
+  quiz_id: string
+  quiz_title: string
+  wager: number
+  outcome: 'win' | 'draw' | 'lose'
+  total_questions: number
+  user_correct_count: number
+  corgi_correct_count: number
+  entry_cost: number
+  payout: number
+  net_reward: number
+  started_at: string
+  finished_at?: string | null
+}
+
+export interface SelfBeliefQuizAttemptResult {
+  attempt_id: string
+  quiz_id: string
+  quiz_title: string
+  wager: number
+  outcome: 'win' | 'draw' | 'lose'
+  entry_cost: number
+  payout: number
+  net_reward: number
+  total_questions: number
+  user_correct_count: number
+  corgi_correct_count: number
+  balance_after: number
+  message: string
+  questions: SelfBeliefQuizQuestionResult[]
+  finished_at: string
+}
+
+export interface SelfBeliefQuizOverviewStats {
+  matches_played: number
+  wins: number
+  draws: number
+  losses: number
+  net_reward: number
+  win_rate: number
+}
+
+export interface SelfBeliefQuizOverview {
+  stats: SelfBeliefQuizOverviewStats
+  recent_attempts: SelfBeliefQuizAttemptSummary[]
+  completed_quiz_ids?: string[]
+}
+
+export type SelfBeliefQuizInput = Omit<SelfBeliefQuiz, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'question_count'>
 
 export interface Purchase {
   id: string

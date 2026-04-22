@@ -16,6 +16,12 @@ export function resolveTaskTypeLabel(value?: string | null) {
     return 'Другое'
   }
 
-  const predefined = predefinedTaskTypeOptions.find((option) => option.value === normalized)
+  const normalizedKey = normalized.toLowerCase()
+  const predefined = predefinedTaskTypeOptions.find((option) => option.value === normalizedKey)
+
+  if (normalizedKey === 'other') {
+    return 'Другое'
+  }
+
   return predefined?.label ?? normalized
 }

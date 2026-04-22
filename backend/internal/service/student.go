@@ -15,6 +15,7 @@ type StudentService struct {
 	purchRepo          *repository.PurchaseRepository
 	bonusRepo          *repository.DailyBonusRepository
 	materialRepo       *repository.MaterialRepository
+	selfBeliefRepo     *repository.SelfBeliefRepository
 	surveyRepo         *repository.SurveyRepository
 	taskRepo           *repository.TaskRepository
 	taskSubmissionRepo *repository.TaskSubmissionRepository
@@ -26,6 +27,7 @@ func NewStudentService(
 	purchRepo *repository.PurchaseRepository,
 	bonusRepo *repository.DailyBonusRepository,
 	materialRepo *repository.MaterialRepository,
+	selfBeliefRepo *repository.SelfBeliefRepository,
 	surveyRepo *repository.SurveyRepository,
 	taskRepo *repository.TaskRepository,
 	taskSubmissionRepo *repository.TaskSubmissionRepository,
@@ -36,6 +38,7 @@ func NewStudentService(
 		purchRepo:          purchRepo,
 		bonusRepo:          bonusRepo,
 		materialRepo:       materialRepo,
+		selfBeliefRepo:     selfBeliefRepo,
 		surveyRepo:         surveyRepo,
 		taskRepo:           taskRepo,
 		taskSubmissionRepo: taskSubmissionRepo,

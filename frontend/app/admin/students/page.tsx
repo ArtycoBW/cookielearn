@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -42,7 +42,7 @@ type ParsedStudent = {
   middle_name?: string
 }
 
-type StudentSortKey = 'full_name' | 'login' | 'group_name' | 'last_login_at' | 'balance'
+type StudentSortKey = 'full_name' | 'group_name' | 'last_login_at' | 'balance'
 type SortDirection = 'asc' | 'desc'
 type StudentSort = {
   key: StudentSortKey
@@ -188,8 +188,6 @@ export default function AdminStudentsPage() {
 
     return [...filtered].sort((left, right) => {
       switch (studentSort.key) {
-        case 'login':
-          return ((left.login || '').localeCompare(right.login || '', 'ru') || left.full_name.localeCompare(right.full_name, 'ru')) * direction
         case 'group_name':
           return ((left.group_name || '').localeCompare(right.group_name || '', 'ru') || left.full_name.localeCompare(right.full_name, 'ru')) * direction
         case 'last_login_at': {
@@ -735,11 +733,10 @@ export default function AdminStudentsPage() {
                       </div>
                     ) : filteredStudents.length > 0 ? (
                       <div className="overflow-x-auto rounded-3xl border border-border/60 bg-card/55">
-                        <div className="min-w-[1120px]">
-                          <div className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3">
+                        <div className="min-w-[980px]">
+                          <div className="grid grid-cols-[minmax(260px,2.2fr)_minmax(150px,1fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3">
                             {[
                               ['full_name', 'ФИО'],
-                              ['login', 'Логин'],
                               ['group_name', 'Группа'],
                               ['last_login_at', 'Последний вход'],
                               ['balance', 'Печеньки'],
@@ -768,9 +765,8 @@ export default function AdminStudentsPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          <div className="grid grid-cols-[minmax(260px,2.2fr)_minmax(150px,1fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] gap-4 border-b border-border/40 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                             <div>ФИО</div>
-                            <div>Логин</div>
                             <div>Группа</div>
                             <div>Последний вход</div>
                             <div>Печеньки</div>
@@ -788,7 +784,7 @@ export default function AdminStudentsPage() {
                               return (
                                 <div
                                   key={student.id}
-                                  className="grid grid-cols-[minmax(240px,2fr)_minmax(150px,1.05fr)_minmax(130px,0.95fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] items-center gap-4 px-5 py-3 transition-colors hover:bg-secondary/20"
+                                  className="grid grid-cols-[minmax(260px,2.2fr)_minmax(150px,1fr)_minmax(190px,1.15fr)_minmax(130px,0.8fr)_minmax(170px,0.95fr)] items-center gap-4 px-5 py-3 transition-colors hover:bg-secondary/20"
                                 >
                                   <div className="min-w-0">
                                     {isEditing ? (
@@ -822,10 +818,6 @@ export default function AdminStudentsPage() {
                                         </div>
                                       </div>
                                     )}
-                                  </div>
-
-                                  <div className="min-w-0 font-mono text-sm text-card-foreground/90" title={student.login || '—'}>
-                                    <span className="block truncate">{student.login || '—'}</span>
                                   </div>
 
                                   <div className="min-w-0">
@@ -1010,4 +1002,3 @@ export default function AdminStudentsPage() {
     </>
   )
 }
-

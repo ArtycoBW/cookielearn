@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Info, Lock } from 'lucide-react'
+import { Info } from 'lucide-react'
+import NextImage from 'next/image'
 import { useBuyCertificate, useCertificateBackground, useProfile, useShopCertificates } from '@/lib/queries'
 import type { Certificate, Profile } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -31,7 +32,14 @@ function ShopCertificateCard({ cert, index, profile, isBuying, onBuy }: ShopCert
       <Card className="relative flex h-full flex-col overflow-hidden">
         {backgroundImage && (
           <div className="absolute inset-0 z-0">
-            <img src={backgroundImage} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+            <NextImage
+              src={backgroundImage}
+              alt=""
+              fill
+              unoptimized
+              className="object-cover"
+              sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            />
             <div className="absolute inset-0 bg-card/70 backdrop-blur-[1.5px]" />
           </div>
         )}
@@ -143,18 +151,6 @@ export default function ShopPage() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
             <h1 className="mb-2 text-4xl font-bold text-blue-900">Магазин сертификатов</h1>
             <p className="text-blue-600/70">Обменивайте свои печеньки на привилегии и полезные бонусы курса.</p>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white/95">
-              <CardContent className="flex items-center gap-6 pt-6">
-                <Lock className="h-8 w-8 shrink-0 text-white/60" />
-                <div>
-                  <p className="text-lg font-bold">Случайное колесо отключено</p>
-                  <p className="text-sm text-blue-100">Оставили только сертификаты и прозрачные покупки без скрытых игровых механик.</p>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }}>

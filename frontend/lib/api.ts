@@ -1,15 +1,19 @@
-﻿import { createClient } from './supabase'
+import { createClient } from './supabase'
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
 
 async function throwApiError(res: Response): Promise<never> {
   let message = `Ошибка ${res.status}`
+
   try {
     const body = await res.json()
-    if (body.error) message = body.error
+    if (body.error) {
+      message = body.error
+    }
   } catch {
     // response is not JSON (e.g. plain-text 404 from router)
   }
+
   throw new Error(message)
 }
 

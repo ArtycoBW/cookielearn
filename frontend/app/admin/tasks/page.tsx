@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import {
   useAdminTaskSubmissions,
@@ -373,6 +374,13 @@ export default function AdminTasksPage() {
             </Dialog>
           </motion.div>
 
+          <Tabs defaultValue="tasks" className="space-y-4">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-2 rounded-[1.75rem] p-2">
+              <TabsTrigger value="tasks">Задания</TabsTrigger>
+              <TabsTrigger value="answers">Ответы</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="tasks">
           <Card>
             <CardHeader>
               <CardTitle>Задания в работе</CardTitle>
@@ -425,8 +433,8 @@ export default function AdminTasksPage() {
                                 </div>
                               </div>
 
-                              <div className="xl:justify-self-end">
-                                <div className="rounded-[1.35rem] border border-border/50 bg-secondary/45 px-4 py-3 text-right">
+                              <div className="xl:self-start">
+                                <div className="w-full rounded-[1.35rem] border border-border/50 bg-secondary/45 px-4 py-3 text-right xl:min-w-[148px]">
                                   <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Максимум</div>
                                   <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[2rem] font-bold leading-none text-card-foreground">
                                     <span>{task.reward}</span>
@@ -483,7 +491,9 @@ export default function AdminTasksPage() {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
 
+            <TabsContent value="answers">
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -576,7 +586,7 @@ export default function AdminTasksPage() {
                         </div>
 
                         {submission.reviewed ? (
-                          <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700">
+                          <div className="shrink-0 rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700">
                             Выдано: {submission.reward_given ?? 0} 🍪
                           </div>
                         ) : (
@@ -613,6 +623,8 @@ export default function AdminTasksPage() {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>

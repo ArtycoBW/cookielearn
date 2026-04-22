@@ -32,6 +32,7 @@ type AdminService struct {
 	txRepo             *repository.TransactionRepository
 	certRepo           *repository.CertificateRepository
 	materialRepo       *repository.MaterialRepository
+	selfBeliefRepo     *repository.SelfBeliefRepository
 	taskRepo           *repository.TaskRepository
 	taskSubmissionRepo *repository.TaskSubmissionRepository
 	purchaseRepo       *repository.PurchaseRepository
@@ -47,6 +48,7 @@ func NewAdminService(
 	txRepo *repository.TransactionRepository,
 	certRepo *repository.CertificateRepository,
 	materialRepo *repository.MaterialRepository,
+	selfBeliefRepo *repository.SelfBeliefRepository,
 	taskRepo *repository.TaskRepository,
 	taskSubmissionRepo *repository.TaskSubmissionRepository,
 	purchaseRepo *repository.PurchaseRepository,
@@ -65,6 +67,7 @@ func NewAdminService(
 		txRepo:             txRepo,
 		certRepo:           certRepo,
 		materialRepo:       materialRepo,
+		selfBeliefRepo:     selfBeliefRepo,
 		taskRepo:           taskRepo,
 		taskSubmissionRepo: taskSubmissionRepo,
 		purchaseRepo:       purchaseRepo,
@@ -251,10 +254,10 @@ func (s *AdminService) AwardCookies(
 	normalizedBadgeTitle := normalizeOptionalText(badgeTitle)
 	if normalizedBadgeIcon != nil || normalizedBadgeTitle != nil {
 		if amount < 0 {
-			return fmt.Errorf("Р±РµР№РґР¶ РјРѕР¶РЅРѕ РІС‹РґР°РІР°С‚СЊ С‚РѕР»СЊРєРѕ РїСЂРё РЅР°С‡РёСЃР»РµРЅРёРё, Р° РЅРµ СЃРїРёСЃР°РЅРёРё")
+			return fmt.Errorf("бейдж можно выдавать только при начислении, а не списании")
 		}
 		if normalizedBadgeIcon == nil || normalizedBadgeTitle == nil {
-			return fmt.Errorf("РґР»СЏ Р±РµР№РґР¶Р° РЅСѓР¶РЅРѕ СѓРєР°Р·Р°С‚СЊ Рё РёРєРѕРЅРєСѓ, Рё РЅР°Р·РІР°РЅРёРµ")
+			return fmt.Errorf("для бейджа нужно указать и иконку, и название")
 		}
 	}
 

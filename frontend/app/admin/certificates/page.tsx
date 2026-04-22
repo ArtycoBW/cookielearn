@@ -1,8 +1,9 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, ImagePlus, PencilLine, Trash2 } from 'lucide-react'
+import NextImage from 'next/image'
 import { Navigation } from '@/components/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -382,7 +383,14 @@ export default function AdminCertificatesPage() {
                   <div className="xl:col-span-3">
                     {form.background_image ? (
                       <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
-                        <img src={form.background_image} alt="Предпросмотр фона" className="h-28 w-full object-cover" />
+                        <NextImage
+                          src={form.background_image}
+                          alt="Предпросмотр фона"
+                          width={800}
+                          height={224}
+                          unoptimized
+                          className="h-28 w-full object-cover"
+                        />
                       </div>
                     ) : (
                       <div className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-secondary/40 text-sm text-muted-foreground">
@@ -395,9 +403,6 @@ export default function AdminCertificatesPage() {
                     <Button type="submit" isLoading={createCertificate.isPending}>
                       Создать сертификат
                     </Button>
-                    <p className="text-sm text-muted-foreground">
-                      Фон и дата теперь сохраняются в backend и отображаются в магазине без дополнительных действий.
-                    </p>
                   </div>
                 </form>
               </CardContent>
@@ -434,7 +439,14 @@ export default function AdminCertificatesPage() {
                           <div className="grid grid-cols-1 gap-0 xl:grid-cols-[280px_minmax(0,1fr)]">
                             <div className="relative min-h-[220px] border-b border-border/70 xl:min-h-full xl:border-b-0 xl:border-r">
                               {currentForm.background_image ? (
-                                <img src={currentForm.background_image} alt="Фон сертификата" className="h-full w-full object-cover" />
+                                <NextImage
+                                  src={currentForm.background_image}
+                                  alt="Фон сертификата"
+                                  fill
+                                  unoptimized
+                                  className="object-cover"
+                                  sizes="280px"
+                                />
                               ) : (
                                 <div className="flex h-full min-h-[220px] items-center justify-center bg-[linear-gradient(135deg,rgba(255,255,255,0.28),transparent),radial-gradient(circle_at_top_left,rgba(255,255,255,0.45),transparent_42%)] text-sm text-muted-foreground">
                                   Фон не задан

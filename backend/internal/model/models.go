@@ -104,6 +104,184 @@ type Material struct {
 	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
+type SelfBeliefQuestion struct {
+	ID            string     `json:"id"`
+	Category      string     `json:"category"`
+	Wager         int        `json:"wager"`
+	Prompt        string     `json:"prompt"`
+	Options       []string   `json:"options"`
+	CorrectOption int        `json:"correct_option"`
+	Explanation   *string    `json:"explanation,omitempty"`
+	IsActive      bool       `json:"is_active"`
+	CreatedBy     *string    `json:"created_by,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+type SelfBeliefQuestionPublic struct {
+	ID       string   `json:"id"`
+	Category string   `json:"category"`
+	Wager    int      `json:"wager"`
+	Prompt   string   `json:"prompt"`
+	Options  []string `json:"options"`
+}
+
+type SelfBeliefAttempt struct {
+	ID             string     `json:"id"`
+	UserID         string     `json:"user_id"`
+	QuestionID     string     `json:"question_id"`
+	Category       string     `json:"category"`
+	Wager          int        `json:"wager"`
+	SelectedOption int        `json:"selected_option"`
+	CorrectOption  int        `json:"correct_option"`
+	Prompt         string     `json:"prompt"`
+	Options        []string   `json:"options"`
+	IsCorrect      bool       `json:"is_correct"`
+	RewardDelta    int        `json:"reward_delta"`
+	BalanceAfter   int        `json:"balance_after"`
+	Explanation    *string    `json:"explanation,omitempty"`
+	CreatedAt      time.Time  `json:"created_at"`
+}
+
+type SelfBeliefStats struct {
+	TotalAttempts   int `json:"total_attempts"`
+	CorrectAttempts int `json:"correct_attempts"`
+	NetReward       int `json:"net_reward"`
+	AccuracyPercent int `json:"accuracy_percent"`
+}
+
+type SelfBeliefOverview struct {
+	Stats          SelfBeliefStats      `json:"stats"`
+	Categories     []string             `json:"categories"`
+	RecentAttempts []SelfBeliefAttempt  `json:"recent_attempts"`
+}
+
+type SelfBeliefAnswerResult struct {
+	Attempt SelfBeliefAttempt `json:"attempt"`
+	Message string            `json:"message"`
+}
+
+type SelfBeliefQuizQuestionLink struct {
+	QuestionID string `json:"question_id"`
+	Position   int    `json:"position"`
+}
+
+type SelfBeliefQuiz struct {
+	ID               string                      `json:"id"`
+	Title            string                      `json:"title"`
+	Description      *string                     `json:"description,omitempty"`
+	Wager            int                         `json:"wager"`
+	TimeLimitSeconds int                         `json:"time_limit_seconds"`
+	IsActive         bool                        `json:"is_active"`
+	QuestionCount    int                         `json:"question_count"`
+	Questions        []SelfBeliefQuizQuestionLink `json:"questions,omitempty"`
+	CreatedBy        *string                     `json:"created_by,omitempty"`
+	CreatedAt        time.Time                   `json:"created_at"`
+	UpdatedAt        time.Time                   `json:"updated_at"`
+}
+
+type SelfBeliefQuizPublicQuestion struct {
+	ID                  string   `json:"id"`
+	Category            string   `json:"category"`
+	Prompt              string   `json:"prompt"`
+	Options             []string `json:"options"`
+	Position            int      `json:"position"`
+	CorgiSelectedOption int      `json:"corgi_selected_option"`
+	CorgiRevealAfterMs  int      `json:"corgi_reveal_after_ms"`
+}
+
+type SelfBeliefQuizPublic struct {
+	ID               string                       `json:"id"`
+	Title            string                       `json:"title"`
+	Description      *string                      `json:"description,omitempty"`
+	Wager            int                          `json:"wager"`
+	TimeLimitSeconds int                          `json:"time_limit_seconds"`
+	QuestionCount    int                          `json:"question_count"`
+	Questions        []SelfBeliefQuizPublicQuestion `json:"questions"`
+}
+
+type SelfBeliefQuizStartResult struct {
+	AttemptID         string               `json:"attempt_id"`
+	Quiz              SelfBeliefQuizPublic `json:"quiz"`
+	EntryCost         int                  `json:"entry_cost"`
+	BalanceAfterEntry int                  `json:"balance_after_entry"`
+	StartedAt         time.Time            `json:"started_at"`
+	Message           string               `json:"message"`
+}
+
+type SelfBeliefQuizAnswerSubmission struct {
+	QuestionID     string `json:"question_id"`
+	SelectedOption *int   `json:"selected_option,omitempty"`
+	TimedOut       bool   `json:"timed_out"`
+	ResponseMs     int    `json:"response_ms"`
+}
+
+type SelfBeliefQuizQuestionResult struct {
+	QuestionID          string    `json:"question_id"`
+	Position            int       `json:"position"`
+	Category            string    `json:"category"`
+	Prompt              string    `json:"prompt"`
+	Options             []string  `json:"options"`
+	CorrectOption       int       `json:"correct_option"`
+	SelectedOption      *int      `json:"selected_option,omitempty"`
+	ResponseMs          int       `json:"response_ms"`
+	TimedOut            bool      `json:"timed_out"`
+	IsCorrect           bool      `json:"is_correct"`
+	CorgiSelectedOption int       `json:"corgi_selected_option"`
+	CorgiIsCorrect      bool      `json:"corgi_is_correct"`
+	Explanation         *string   `json:"explanation,omitempty"`
+	CreatedAt           time.Time `json:"created_at"`
+}
+
+type SelfBeliefQuizAttemptSummary struct {
+	ID               string    `json:"id"`
+	QuizID           string    `json:"quiz_id"`
+	QuizTitle        string    `json:"quiz_title"`
+	Wager            int       `json:"wager"`
+	Outcome          string    `json:"outcome"`
+	TotalQuestions   int       `json:"total_questions"`
+	UserCorrectCount int       `json:"user_correct_count"`
+	CorgiCorrectCount int      `json:"corgi_correct_count"`
+	EntryCost        int       `json:"entry_cost"`
+	Payout           int       `json:"payout"`
+	NetReward        int       `json:"net_reward"`
+	StartedAt        time.Time `json:"started_at"`
+	FinishedAt       *time.Time `json:"finished_at,omitempty"`
+}
+
+type SelfBeliefQuizAttemptResult struct {
+	AttemptID         string                        `json:"attempt_id"`
+	QuizID            string                        `json:"quiz_id"`
+	QuizTitle         string                        `json:"quiz_title"`
+	Wager             int                           `json:"wager"`
+	Outcome           string                        `json:"outcome"`
+	EntryCost         int                           `json:"entry_cost"`
+	Payout            int                           `json:"payout"`
+	NetReward         int                           `json:"net_reward"`
+	TotalQuestions    int                           `json:"total_questions"`
+	UserCorrectCount  int                           `json:"user_correct_count"`
+	CorgiCorrectCount int                           `json:"corgi_correct_count"`
+	BalanceAfter      int                           `json:"balance_after"`
+	Message           string                        `json:"message"`
+	Questions         []SelfBeliefQuizQuestionResult `json:"questions"`
+	FinishedAt        time.Time                     `json:"finished_at"`
+}
+
+type SelfBeliefQuizOverviewStats struct {
+	MatchesPlayed int `json:"matches_played"`
+	Wins          int `json:"wins"`
+	Draws         int `json:"draws"`
+	Losses        int `json:"losses"`
+	NetReward     int `json:"net_reward"`
+	WinRate       int `json:"win_rate"`
+}
+
+type SelfBeliefQuizOverview struct {
+	Stats            SelfBeliefQuizOverviewStats    `json:"stats"`
+	RecentAttempts   []SelfBeliefQuizAttemptSummary `json:"recent_attempts"`
+	CompletedQuizIDs []string                       `json:"completed_quiz_ids"`
+}
+
 type Purchase struct {
 	ID            string     `json:"id"`
 	UserID        string     `json:"user_id"`

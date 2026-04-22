@@ -1,10 +1,11 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { LevelProgressBar } from '@/components/level-progress-bar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getLevelTone } from '@/lib/player-progress'
+import { getLevelProgressMeta, getLevelTone } from '@/lib/player-progress'
 import { useLeaderboard, useProfile } from '@/lib/queries'
 
 type LeaderboardViewProps = {
@@ -15,6 +16,7 @@ type LeaderboardViewProps = {
 export function LeaderboardView({ title, description }: LeaderboardViewProps) {
   const { data: leaderboard, isLoading } = useLeaderboard()
   const { data: profile } = useProfile()
+  const [sortMode, setSortMode] = useState<'total' | 'balance'>('total')
 
   const getMedal = (rank: number) => {
     switch (rank) {
@@ -29,6 +31,30 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
     }
   }
 
+  const sortedLeaderboard = useMemo(() => {
+    const list = Array.isArray(leaderboard) ? [...leaderboard] : []
+
+    list.sort((left, right) => {
+      if (sortMode === 'balance') {
+        return (
+          right.balance - left.balance ||
+          right.total_earned - left.total_earned ||
+          right.activity_score - left.activity_score ||
+          left.full_name.localeCompare(right.full_name, 'ru')
+        )
+      }
+
+      return (
+        right.total_earned - left.total_earned ||
+        right.activity_score - left.activity_score ||
+        right.balance - left.balance ||
+        left.full_name.localeCompare(right.full_name, 'ru')
+      )
+    })
+
+    return list
+  }, [leaderboard, sortMode])
+
   return (
     <div className="min-h-screen page-theme-gradient">
       <div className="mx-auto max-w-6xl p-6">
@@ -39,8 +65,32 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>Все студенты</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSortMode('total')}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    sortMode === 'total'
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'border-border/70 bg-card/75 text-muted-foreground hover:bg-secondary/40'
+                  }`}
+                >
+                  По общему заработку
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortMode('balance')}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    sortMode === 'balance'
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'border-border/70 bg-card/75 text-muted-foreground hover:bg-secondary/40'
+                  }`}
+                >
+                  По текущему балансу
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -49,12 +99,19 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                     <div key={index} className="h-18 animate-pulse rounded-[1.5rem] bg-secondary/70" />
                   ))}
                 </div>
-              ) : leaderboard && leaderboard.length > 0 ? (
+              ) : sortedLeaderboard.length > 0 ? (
                 <div className="space-y-3">
-                  {leaderboard.map((entry, index) => {
+                  {sortedLeaderboard.map((entry, index) => {
                     const isCurrentUser = profile?.id === entry.id
-                    const isTopThree = entry.rank <= 3
+                    const displayRank = index + 1
+                    const isTopThree = displayRank <= 3
                     const levelTone = getLevelTone(entry.level_name)
+                    const levelProgressMeta = getLevelProgressMeta(entry.total_earned, entry.level_name)
+                    const primaryValue = sortMode === 'total' ? entry.total_earned : entry.balance
+                    const secondaryLabel =
+                      sortMode === 'total'
+                        ? `Текущий баланс: ${entry.balance} 🍪`
+                        : `Всего заработано: ${entry.total_earned} 🍪`
 
                     return (
                       <motion.div
@@ -73,12 +130,12 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_170px] lg:items-center">
                           <div className="flex min-w-0 items-start gap-3">
                             <div className={`min-w-[2.2rem] pt-0.5 text-center text-[1.15rem] font-bold ${isCurrentUser || isTopThree ? 'text-primary' : 'text-card-foreground'}`}>
-                              {getMedal(entry.rank)}
+                              {getMedal(displayRank)}
                             </div>
 
                             <div className="min-w-0 flex-1 space-y-2">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="truncate text-[1.15rem] font-semibold leading-none text-card-foreground sm:text-[1.28rem]">
+                                <p className="truncate text-[1.15rem] font-semibold text-card-foreground sm:text-[1.28rem]">
                                   {entry.full_name}
                                 </p>
                                 {isCurrentUser && <span className="text-[11px] font-medium text-primary/80">(Вы)</span>}
@@ -107,8 +164,17 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                                   progress={entry.level_progress}
                                   trackClassName={isCurrentUser ? `${levelTone.track} ring-1 ring-primary/15` : levelTone.track}
                                   fillClassName={levelTone.fill}
+                                  tooltipMode="none"
                                   tooltipClassName={isCurrentUser ? 'border-primary/20 bg-card/95 text-card-foreground' : ''}
                                 />
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                                  <span>{levelProgressMeta.rangeLabel}</span>
+                                  <span>
+                                    {levelProgressMeta.nextLevelName
+                                      ? `До «${levelProgressMeta.nextLevelName}»: ${levelProgressMeta.remainingCookies} 🍪`
+                                      : 'Максимальный уровень'}
+                                  </span>
+                                </div>
                               </div>
 
                               {entry.badges && entry.badges.length > 0 && (
@@ -135,12 +201,14 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                               isCurrentUser ? 'border-primary/20 bg-primary/5' : 'border-border/60 bg-secondary/30'
                             }`}
                           >
-                            <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Всего заработано</div>
+                            <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                              {sortMode === 'total' ? 'Всего заработано' : 'Текущий баланс'}
+                            </div>
                             <div className="mt-1 flex items-center justify-end gap-1.5 text-[1.65rem] font-bold text-card-foreground">
-                              <span>{entry.total_earned}</span>
+                              <span>{primaryValue}</span>
                               <span>🍪</span>
                             </div>
-                            <div className="mt-1 text-[12px] text-muted-foreground">Текущий баланс: {entry.balance} 🍪</div>
+                            <div className="mt-1 text-[12px] text-muted-foreground">{secondaryLabel}</div>
                           </div>
                         </div>
                       </motion.div>

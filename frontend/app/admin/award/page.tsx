@@ -34,6 +34,8 @@ function categoryLabel(category?: string | null) {
       return 'Награда за анкету'
     case 'task_reward':
       return 'Награда за задание'
+    case 'self_belief_quiz':
+      return 'Верю в себя'
     case 'manual':
     default:
       return 'Ручная операция'

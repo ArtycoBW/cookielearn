@@ -13,6 +13,7 @@ type LevelProgressBarProps = {
   fillClassName: string
   className?: string
   tooltipClassName?: string
+  tooltipMode?: 'hover' | 'none'
 }
 
 export function LevelProgressBar({
@@ -23,9 +24,11 @@ export function LevelProgressBar({
   fillClassName,
   className,
   tooltipClassName,
+  tooltipMode = 'hover',
 }: LevelProgressBarProps) {
   const [open, setOpen] = useState(false)
   const closeTimeoutRef = useRef<number | null>(null)
+  const lastClosedAtRef = useRef(0)
   const meta = getLevelProgressMeta(totalEarned, levelName)
   const resolvedProgress =
     meta.nextThreshold && meta.nextThreshold > meta.currentThreshold
@@ -38,6 +41,11 @@ export function LevelProgressBar({
         )
       : progress
   const displayProgress = Math.round(resolvedProgress)
+  const shouldUseTooltip = tooltipMode === 'hover' && Boolean(meta.nextLevelName)
+  const ariaLabel =
+    meta.nextLevelName
+      ? `До уровня ${meta.nextLevelName} осталось ${meta.remainingCookies} печенек`
+      : 'Максимальный уровень достигнут'
 
   const clearCloseTimeout = () => {
     if (closeTimeoutRef.current) {
@@ -53,8 +61,10 @@ export function LevelProgressBar({
   }, [])
 
   const handleOpen = () => {
+    // Ignore mouseenter that fires immediately after the popover closes (browser re-entry artifact)
+    if (Date.now() - lastClosedAtRef.current < 80) return
     clearCloseTimeout()
-    if (meta.nextLevelName) {
+    if (shouldUseTooltip) {
       setOpen(true)
     }
   }
@@ -62,9 +72,36 @@ export function LevelProgressBar({
   const handleClose = () => {
     clearCloseTimeout()
     closeTimeoutRef.current = window.setTimeout(() => {
+      lastClosedAtRef.current = Date.now()
       setOpen(false)
       closeTimeoutRef.current = null
-    }, 120)
+    }, 200)
+  }
+
+  const progressBar = (
+    <div
+      className={cn('relative h-3.5 overflow-hidden rounded-full border border-border/60 bg-secondary/80 shadow-inner', trackClassName)}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={displayProgress}
+      aria-label={ariaLabel}
+    >
+      <div
+        className={cn('h-full rounded-full transition-[width,box-shadow] duration-300', fillClassName)}
+        style={{
+          width: `${resolvedProgress}%`,
+          minWidth: resolvedProgress > 0 ? '1rem' : '0rem',
+          background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, rgb(var(--brand-400-rgb)) 100%)',
+          boxShadow: '0 0 0 1px rgb(255 255 255 / 0.08) inset, 0 8px 18px -10px hsl(var(--primary) / 0.95)',
+        }}
+      />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0)_55%)]" />
+    </div>
+  )
+
+  if (!shouldUseTooltip) {
+    return <div className={cn('block w-full', className)}>{progressBar}</div>
   }
 
   return (
@@ -78,50 +115,16 @@ export function LevelProgressBar({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={cn('block w-full focus:outline-none', meta.nextLevelName ? 'cursor-help' : 'cursor-default', className)}
+          className={cn('block w-full cursor-help focus:outline-none', className)}
           onMouseEnter={handleOpen}
           onMouseLeave={handleClose}
           onFocus={handleOpen}
           onBlur={handleClose}
-          aria-label={
-            meta.nextLevelName
-              ? `До уровня ${meta.nextLevelName} осталось ${meta.remainingCookies} печенек`
-              : 'Максимальный уровень достигнут'
-          }
+          aria-label={ariaLabel}
         >
-          <div
-            className={cn('relative h-3.5 overflow-hidden rounded-full border border-border/60 bg-secondary/80 shadow-inner', trackClassName)}
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={displayProgress}
-          >
-            <div
-              className={cn('h-full rounded-full transition-[width,box-shadow] duration-300', fillClassName)}
-              style={{
-                width: `${resolvedProgress}%`,
-                minWidth: resolvedProgress > 0 ? '1rem' : '0rem',
-                background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, rgb(var(--brand-400-rgb)) 100%)',
-                boxShadow: '0 0 0 1px rgb(255 255 255 / 0.08) inset, 0 8px 18px -10px hsl(var(--primary) / 0.95)',
-              }}
-            />
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0)_55%)]" />
-          </div>
+          {progressBar}
         </button>
       </PopoverTrigger>
-
-      {meta.nextLevelName ? (
-        <PopoverContent
-          side="top"
-          align="start"
-          sideOffset={4}
-          className={cn('w-auto max-w-[280px]', tooltipClassName)}
-          onMouseEnter={handleOpen}
-          onMouseLeave={handleClose}
-        >
-          <p className="text-sm font-semibold">До «{meta.nextLevelName}» осталось {meta.remainingCookies} 🍪</p>
-        </PopoverContent>
-      ) : null}
     </Popover>
   )
 }

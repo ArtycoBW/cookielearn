@@ -230,9 +230,6 @@ export default function TasksPage() {
         <div className="mx-auto max-w-6xl space-y-6 p-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
             <h1 className="text-4xl font-bold text-blue-900">Задания</h1>
-            <p className="max-w-3xl text-blue-600/80">
-              Преподаватель публикует задания здесь. В ответ можно отправить ссылку, текст с нормальным оформлением или оба варианта сразу.
-            </p>
           </motion.div>
 
           <Tabs defaultValue="active" className="space-y-4">

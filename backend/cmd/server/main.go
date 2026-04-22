@@ -40,6 +40,7 @@ func main() {
 	txRepo := repository.NewTransactionRepository(db)
 	certRepo := repository.NewCertificateRepository(db)
 	materialRepo := repository.NewMaterialRepository(db)
+	selfBeliefRepo := repository.NewSelfBeliefRepository(db)
 	purchRepo := repository.NewPurchaseRepository(db)
 	bonusRepo := repository.NewDailyBonusRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
@@ -53,13 +54,14 @@ func main() {
 	studentEmailDomain := os.Getenv("SUPABASE_STUDENT_EMAIL_DOMAIN")
 	authAdmin := service.NewSupabaseAuthAdmin(supabaseURL, supabaseServiceRole)
 
-	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo, materialRepo, surveyRepo, taskRepo, taskSubmissionRepo)
+	studentService := service.NewStudentService(profileRepo, txRepo, purchRepo, bonusRepo, materialRepo, selfBeliefRepo, surveyRepo, taskRepo, taskSubmissionRepo)
 	shopService := service.NewShopService(certRepo, purchRepo, txRepo, db)
 	adminService := service.NewAdminService(
 		profileRepo,
 		txRepo,
 		certRepo,
 		materialRepo,
+		selfBeliefRepo,
 		taskRepo,
 		taskSubmissionRepo,
 		purchRepo,
@@ -112,6 +114,13 @@ func main() {
 		r.Post("/me/daily-bonus", studentHandler.ClaimDailyBonus)
 		r.Get("/me/survey", studentHandler.GetMySurvey)
 		r.Post("/me/survey", studentHandler.SubmitSurvey)
+		r.Get("/me/self-belief", studentHandler.GetMySelfBeliefOverview)
+		r.Get("/me/self-belief/overview", studentHandler.GetMySelfBeliefQuizOverview)
+		r.Get("/me/self-belief/quizzes", studentHandler.GetMySelfBeliefQuizzes)
+		r.Post("/me/self-belief/quizzes/{id}/start", studentHandler.StartMySelfBeliefQuiz)
+		r.Post("/me/self-belief/attempts/{id}/finish", studentHandler.FinishMySelfBeliefQuiz)
+		r.Get("/me/self-belief/question", studentHandler.GetMySelfBeliefQuestion)
+		r.Post("/me/self-belief/answer", studentHandler.AnswerMySelfBeliefQuestion)
 		r.Get("/materials", studentHandler.GetMaterials)
 		r.Get("/me/tasks", studentHandler.GetMyTasks)
 		r.Post("/me/tasks/{id}/submit", studentHandler.SubmitTask)
@@ -148,6 +157,15 @@ func main() {
 			r.Post("/materials", adminHandler.CreateMaterial)
 			r.Put("/materials/{id}", adminHandler.UpdateMaterial)
 			r.Delete("/materials/{id}", adminHandler.DeleteMaterial)
+
+			r.Get("/self-belief/questions", adminHandler.GetSelfBeliefQuestions)
+			r.Post("/self-belief/questions", adminHandler.CreateSelfBeliefQuestion)
+			r.Put("/self-belief/questions/{id}", adminHandler.UpdateSelfBeliefQuestion)
+			r.Delete("/self-belief/questions/{id}", adminHandler.DeleteSelfBeliefQuestion)
+			r.Get("/self-belief/quizzes", adminHandler.GetSelfBeliefQuizzes)
+			r.Post("/self-belief/quizzes", adminHandler.CreateSelfBeliefQuiz)
+			r.Put("/self-belief/quizzes/{id}", adminHandler.UpdateSelfBeliefQuiz)
+			r.Delete("/self-belief/quizzes/{id}", adminHandler.DeleteSelfBeliefQuiz)
 
 			r.Get("/tasks", adminHandler.GetTasks)
 			r.Post("/tasks", adminHandler.CreateTask)

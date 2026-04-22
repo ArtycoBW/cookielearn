@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
+import { CorgiAvatar } from '@/components/corgi-avatar'
 import { cn } from '@/lib/utils'
 
 type CorgiGuideProps = {
@@ -27,9 +28,9 @@ export function CorgiGuide({ eyebrow, message, hint, className }: CorgiGuideProp
         <motion.div
           animate={{ rotate: [0, -6, 6, 0], y: [0, -2, 0] }}
           transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.6rem] bg-gradient-to-br from-primary/18 via-primary/10 to-secondary/70 text-[2.5rem] shadow-inner"
+          className="shrink-0"
         >
-          🐶
+          <CorgiAvatar size="md" priority />
         </motion.div>
 
         <div className="min-w-0 flex-1 space-y-3">

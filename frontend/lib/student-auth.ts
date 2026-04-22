@@ -1,4 +1,4 @@
-﻿const STUDENT_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN || 'student.cookielearn.local'
+const STUDENT_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN || 'student.cookielearn.local'
 
 export function getStudentEmailDomain() {
   return STUDENT_EMAIL_DOMAIN
