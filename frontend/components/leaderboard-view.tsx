@@ -57,9 +57,9 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
 
   return (
     <div className="min-h-screen page-theme-gradient">
-      <div className="mx-auto max-w-6xl p-6">
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 space-y-2">
-          <h1 className="text-4xl font-bold text-blue-900">{title} 🏆</h1>
+          <h1 className="text-3xl font-bold text-blue-900 sm:text-4xl">{title} 🏆</h1>
           <p className="text-blue-600/75">{description}</p>
         </motion.div>
 
@@ -67,11 +67,11 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
           <Card>
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>Все студенты</CardTitle>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setSortMode('total')}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  className={`min-w-0 flex-1 rounded-full border px-3 py-1.5 text-center text-sm font-semibold leading-5 transition-colors sm:flex-none ${
                     sortMode === 'total'
                       ? 'border-primary/30 bg-primary/10 text-primary'
                       : 'border-border/70 bg-card/75 text-muted-foreground hover:bg-secondary/40'
@@ -82,7 +82,7 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                 <button
                   type="button"
                   onClick={() => setSortMode('balance')}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  className={`min-w-0 flex-1 rounded-full border px-3 py-1.5 text-center text-sm font-semibold leading-5 transition-colors sm:flex-none ${
                     sortMode === 'balance'
                       ? 'border-primary/30 bg-primary/10 text-primary'
                       : 'border-border/70 bg-card/75 text-muted-foreground hover:bg-secondary/40'
@@ -119,7 +119,7 @@ export function LeaderboardView({ title, description }: LeaderboardViewProps) {
                         initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: Math.min(index * 0.02, 0.22) }}
-                        className={`rounded-[1.5rem] border px-4 py-3.5 transition-all ${
+                        className={`rounded-[1.5rem] border px-3 py-3.5 transition-all sm:px-4 ${
                           isCurrentUser
                             ? 'border-primary/35 bg-card/95 shadow-[0_24px_60px_-42px_hsl(var(--primary)/0.42)] ring-1 ring-primary/15'
                             : isTopThree

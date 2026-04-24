@@ -77,14 +77,14 @@ function TimerRing({ timeLeftMs, totalMs }: { timeLeftMs: number; totalMs: numbe
 
   return (
     <div
-      className="relative flex h-32 w-32 items-center justify-center rounded-full p-[10px] shadow-[0_22px_48px_-30px_hsl(var(--primary)/0.5)]"
+      className="relative flex h-24 w-24 items-center justify-center rounded-full p-2 shadow-[0_22px_48px_-30px_hsl(var(--primary)/0.5)] sm:h-32 sm:w-32 sm:p-[10px]"
       style={{
         background: `conic-gradient(from 270deg, ${accent} 0deg ${progressDegrees}deg, rgba(148,163,184,0.18) ${progressDegrees}deg 360deg)`,
       }}
     >
-      <div className="absolute inset-[10px] rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.88))] shadow-inner" />
+      <div className="absolute inset-2 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.88))] shadow-inner sm:inset-[10px]" />
       <div className="relative flex flex-col items-center justify-center">
-        <div className={cn('text-3xl font-bold', urgent ? 'text-rose-600 dark:text-rose-300' : 'text-card-foreground')}>{seconds}</div>
+        <div className={cn('text-2xl font-bold sm:text-3xl', urgent ? 'text-rose-600 dark:text-rose-300' : 'text-card-foreground')}>{seconds}</div>
         <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">секунд</div>
       </div>
     </div>
@@ -183,7 +183,7 @@ function ActiveQuizDialog({
     <Dialog open onOpenChange={() => {}}>
       <DialogContent
         showClose={false}
-        className="max-w-[min(1180px,calc(100vw-1rem))] gap-0 overflow-hidden border-border/70 p-0 sm:rounded-[2rem]"
+        className="h-[100dvh] max-h-[100dvh] max-w-none gap-0 overflow-hidden rounded-none border-border/70 p-0 sm:h-[calc(100dvh-1rem)] sm:max-w-[min(1180px,calc(100vw-1rem))] sm:rounded-[2rem]"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
@@ -192,8 +192,8 @@ function ActiveQuizDialog({
           <DialogDescription>Активный матч против Корги Дурова. Закроется автоматически после завершения серии вопросов.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid max-h-[calc(100vh-1rem)] overflow-hidden lg:grid-cols-[minmax(0,1.18fr)_360px]">
-          <div className="overflow-y-auto bg-[radial-gradient(circle_at_16%_14%,rgba(255,255,255,0.9),rgba(255,255,255,0)_28%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-5 sm:p-7">
+        <div className="grid h-full min-h-0 overflow-y-auto overscroll-contain lg:grid-cols-[minmax(0,1.18fr)_360px] lg:overflow-hidden">
+          <div className="min-h-0 bg-[radial-gradient(circle_at_16%_14%,rgba(255,255,255,0.9),rgba(255,255,255,0)_28%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 sm:p-6 lg:overflow-y-auto lg:p-7">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={currentQuestion.id}
@@ -201,19 +201,19 @@ function ActiveQuizDialog({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.22, ease: 'easeOut' }}
-                className="space-y-6"
+                className="space-y-4 sm:space-y-6"
               >
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                <div className="space-y-4">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0 space-y-3 sm:space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="warning">{resolveSelfBeliefWagerLabel(attempt.quiz.wager)}</Badge>
                     <Badge>{questionNumber} / {attempt.quiz.question_count}</Badge>
                     <Badge>{attempt.quiz.title}</Badge>
                   </div>
 
-                  <div className="space-y-3 rounded-[2rem] border border-border/70 bg-card/90 p-6 shadow-[0_28px_70px_-48px_hsl(var(--primary)/0.34)]">
-                    <div className="text-sm uppercase tracking-[0.18em] text-muted-foreground">{currentQuestion.category}</div>
-                    <h2 className="text-3xl font-bold tracking-tight text-card-foreground sm:text-[2.55rem]">{currentQuestion.prompt}</h2>
+                  <div className="space-y-3 rounded-[1.5rem] border border-border/70 bg-card/90 p-4 shadow-[0_28px_70px_-48px_hsl(var(--primary)/0.34)] sm:rounded-[2rem] sm:p-6">
+                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground sm:text-sm">{currentQuestion.category}</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-card-foreground sm:text-3xl lg:text-[2.55rem]">{currentQuestion.prompt}</h2>
                     <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
                       {locked
                         ? corgiVisible
@@ -229,7 +229,7 @@ function ActiveQuizDialog({
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 sm:gap-4">
                 {currentQuestion.options.map((option, index) => {
                   const isSelected = selectedOption === index
                   const disabled = locked || finishPending
@@ -241,7 +241,7 @@ function ActiveQuizDialog({
                       onClick={() => onSelectOption(index)}
                       disabled={disabled}
                       className={cn(
-                        'rounded-[1.8rem] border bg-card/92 p-5 text-left transition-all duration-200 sm:p-6',
+                        'rounded-[1.3rem] border bg-card/92 p-4 text-left transition-all duration-200 sm:rounded-[1.8rem] sm:p-6',
                         isSelected
                           ? 'border-primary/35 bg-primary/10 shadow-[0_28px_60px_-36px_hsl(var(--primary)/0.55)]'
                           : disabled
@@ -253,7 +253,7 @@ function ActiveQuizDialog({
                         <div className="text-sm font-semibold uppercase tracking-[0.18em] text-primary/80">{optionLetter(index)}</div>
                         {isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : null}
                       </div>
-                      <p className="mt-5 text-xl font-semibold leading-9 text-card-foreground">{option}</p>
+                      <p className="mt-3 text-base font-semibold leading-7 text-card-foreground sm:mt-5 sm:text-xl sm:leading-9">{option}</p>
                     </button>
                   )
                 })}
@@ -262,7 +262,7 @@ function ActiveQuizDialog({
             </AnimatePresence>
           </div>
 
-          <aside className="overflow-y-auto border-t border-border/60 bg-[linear-gradient(180deg,rgba(241,245,249,0.86),rgba(248,250,252,0.98))] p-5 sm:p-6 lg:border-l lg:border-t-0">
+          <aside className="min-h-0 border-t border-border/60 bg-[linear-gradient(180deg,rgba(241,245,249,0.86),rgba(248,250,252,0.98))] p-4 sm:p-6 lg:overflow-y-auto lg:border-l lg:border-t-0">
             <div className="space-y-5">
               <div className="rounded-[1.8rem] border border-border/70 bg-card/88 p-5 shadow-[0_26px_56px_-44px_hsl(var(--primary)/0.34)]">
                 <div className="flex items-start gap-4">
@@ -658,7 +658,7 @@ export default function QuizPage() {
       ) : null}
 
       <div className="min-h-screen page-theme-gradient">
-        <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
           <motion.section initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-primary/20 bg-primary/10 text-card-foreground">Режим</Badge>

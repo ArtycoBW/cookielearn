@@ -113,6 +113,19 @@ export function Navigation() {
     setMobileMenuOpen(false)
   }, [pathname])
 
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [mobileMenuOpen])
+
   const handleLogout = async () => {
     setIsLoggingOut(true)
 
@@ -282,9 +295,9 @@ export function Navigation() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="nav-mobile-panel"
+              className="nav-mobile-panel fixed inset-x-0 top-[72px] max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
             >
-              <div className="space-y-2 px-4 py-4">
+              <div className="space-y-2 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4">
                 <div className="rounded-xl bg-white/10 p-3">
                   <div className="mb-2 flex items-center gap-2 text-sm text-white/90">
                     <Palette className="h-4 w-4" />

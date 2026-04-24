@@ -13,6 +13,8 @@ type playerLevel struct {
 	Threshold int
 }
 
+var leaderboardExcludedEarnedCategories = []string{"random_bonus"}
+
 var playerLevels = []playerLevel{
 	{Name: "Заклинатель запросов", Threshold: 0},
 	{Name: "Исследователь кода", Threshold: 36},
@@ -30,11 +32,9 @@ func applyProgressToProfiles(
 		return nil
 	}
 
-	userIDs := make([]string, 0, len(profiles))
-	for _, profile := range profiles {
-		if profile != nil && profile.ID != "" {
-			userIDs = append(userIDs, profile.ID)
-		}
+	userIDs := collectProfileIDs(profiles)
+	if len(userIDs) == 0 {
+		return nil
 	}
 
 	metrics, err := profileRepo.GetActivityMetrics(ctx, userIDs)
@@ -55,6 +55,62 @@ func applyProgressToProfiles(
 	}
 
 	return nil
+}
+
+func applyLeaderboardProgressToProfiles(
+	ctx context.Context,
+	profileRepo *repository.ProfileRepository,
+	profiles []*model.Profile,
+) error {
+	if err := applyProgressToProfiles(ctx, profileRepo, profiles); err != nil {
+		return err
+	}
+
+	userIDs := collectProfileIDs(profiles)
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	earnedTotals, err := profileRepo.GetEarnedTotalsExcludingCategories(ctx, userIDs, leaderboardExcludedEarnedCategories)
+	if err != nil {
+		return err
+	}
+
+	for _, profile := range profiles {
+		if profile == nil {
+			continue
+		}
+
+		totalEarned := earnedTotals[profile.ID]
+		metrics := repository.ProfileActivityMetrics{
+			TotalEarned:     totalEarned,
+			SubmittedTasks:  profile.SubmittedTasks,
+			ReviewedTasks:   profile.ReviewedTasks,
+			PurchaseCount:   profile.PurchaseCount,
+			SurveyCompleted: profile.SurveyCompleted,
+			BadgeCount:      profile.BadgeCount,
+		}
+		levelName, nextLevelName, progress, score := calculatePlayerLevel(metrics)
+
+		profile.TotalEarned = totalEarned
+		profile.ActivityScore = score
+		profile.LevelName = levelName
+		profile.NextLevelName = nextLevelName
+		profile.LevelProgress = progress
+	}
+
+	return nil
+}
+
+func collectProfileIDs(profiles []*model.Profile) []string {
+	userIDs := make([]string, 0, len(profiles))
+	for _, profile := range profiles {
+		if profile != nil && profile.ID != "" {
+			userIDs = append(userIDs, profile.ID)
+		}
+	}
+
+	return userIDs
 }
 
 func applyProgressToProfile(profile *model.Profile, metrics repository.ProfileActivityMetrics, badges []model.BadgeAward) {

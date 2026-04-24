@@ -161,6 +161,65 @@ func (r *ProfileRepository) GetActivityMetrics(ctx context.Context, userIDs []st
 	return metrics, nil
 }
 
+func (r *ProfileRepository) GetEarnedTotalsExcludingCategories(ctx context.Context, userIDs []string, excludedCategories []string) (map[string]int, error) {
+	if len(userIDs) == 0 {
+		return map[string]int{}, nil
+	}
+
+	query := `
+		WITH scoped_users AS (
+			SELECT UNNEST($1::uuid[]) AS user_id
+		),
+		transaction_metrics AS (
+			SELECT
+				user_id,
+				COALESCE(
+					SUM(
+						CASE
+							WHEN amount > 0 AND NOT (COALESCE(category, '') = ANY($2::text[]))
+								THEN amount
+							ELSE 0
+						END
+					),
+					0
+				)::INT AS total_earned
+			FROM cookie_transactions
+			WHERE user_id = ANY($1::uuid[])
+			GROUP BY user_id
+		)
+		SELECT
+			u.user_id::text,
+			COALESCE(tm.total_earned, 0)
+		FROM scoped_users u
+		LEFT JOIN transaction_metrics tm ON tm.user_id = u.user_id
+	`
+
+	rows, err := r.db.Pool.Query(ctx, query, userIDs, excludedCategories)
+	if err != nil {
+		return nil, fmt.Errorf("get earned totals excluding categories: %w", err)
+	}
+	defer rows.Close()
+
+	totals := make(map[string]int, len(userIDs))
+	for rows.Next() {
+		var (
+			userID string
+			total  int
+		)
+
+		if err := rows.Scan(&userID, &total); err != nil {
+			return nil, fmt.Errorf("scan earned total: %w", err)
+		}
+
+		totals[userID] = total
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate earned totals: %w", err)
+	}
+
+	return totals, nil
+}
+
 func (r *ProfileRepository) GetRecentBadges(ctx context.Context, userIDs []string, limitPerUser int) (map[string][]model.BadgeAward, error) {
 	if len(userIDs) == 0 {
 		return map[string][]model.BadgeAward{}, nil

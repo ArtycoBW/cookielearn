@@ -159,7 +159,7 @@ function StudentHubSkeleton() {
     <>
       <Navigation />
       <div className="min-h-screen page-theme-gradient">
-        <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
           <div className="h-16 animate-pulse rounded-[2rem] bg-secondary/70" />
           <div className="grid gap-6 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
@@ -282,7 +282,7 @@ export function StudentWorkspace({ activeTab }: { activeTab: StudentHubTab }) {
     <>
       <Navigation />
       <div className="min-h-screen page-theme-gradient">
-        <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
           <motion.section initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-primary/20 bg-primary/10 text-card-foreground">Личный кабинет</Badge>
@@ -437,7 +437,7 @@ export function StudentWorkspace({ activeTab }: { activeTab: StudentHubTab }) {
                       onClick={handleClaimDailyBonus}
                       isLoading={claimDailyBonus.isPending}
                       disabled={!summary.streak.can_claim_today}
-                      className="w-full sm:w-auto"
+                      className="!h-auto min-h-11 w-full whitespace-normal py-3 leading-5 sm:w-auto"
                     >
                       <Cookie className="h-4 w-4" />
                       {summary.streak.can_claim_today ? 'Забрать ежедневный бонус' : 'Бонус на сегодня уже получен'}
@@ -468,7 +468,7 @@ export function StudentWorkspace({ activeTab }: { activeTab: StudentHubTab }) {
                         onClick={handleLuckyBonus}
                         isLoading={buyRandomBonus.isPending}
                         disabled={summary.profile.balance < 3}
-                        className="w-full"
+                        className="!h-auto min-h-11 w-full whitespace-normal py-3 leading-5"
                       >
                         <Sparkles className="h-4 w-4" />
                         {summary.profile.balance < 3 ? 'Нужно минимум 3 печеньки' : 'Открыть сундук за 3 печеньки'}

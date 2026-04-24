@@ -79,7 +79,7 @@ func (s *StudentService) getLeaderboardRank(ctx context.Context, userID string) 
 		return 0, err
 	}
 
-	if err := applyProgressToProfiles(ctx, s.profileRepo, profiles); err != nil {
+	if err := applyLeaderboardProgressToProfiles(ctx, s.profileRepo, profiles); err != nil {
 		return 0, err
 	}
 

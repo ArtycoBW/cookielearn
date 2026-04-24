@@ -138,7 +138,7 @@ func (s *StudentService) GetLeaderboard(ctx context.Context, limit int) ([]*mode
 		return nil, err
 	}
 
-	if err := applyProgressToProfiles(ctx, s.profileRepo, profiles); err != nil {
+	if err := applyLeaderboardProgressToProfiles(ctx, s.profileRepo, profiles); err != nil {
 		return nil, err
 	}
 
